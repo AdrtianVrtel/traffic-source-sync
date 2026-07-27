@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Upload, Button, Table, message, Card, Typography, Space, Alert, Progress, Popconfirm } from "antd";
+import { Upload, Button, Table, message, Card, Typography, Space, Alert, Progress, Popconfirm, Tabs } from "antd";
 import { InboxOutlined, SyncOutlined, DownloadOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
+import { TrafficCharts } from "./charts";
 
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
@@ -162,7 +163,7 @@ export const TrafficSyncTool = () => {
       // Extract unique emails
       const emails = [...new Set(data.map((row) => row[emailColumnName]).filter(Boolean))];
       
-      const BATCH_SIZE = 40;
+      const BATCH_SIZE = 10;
       const totalBatches = Math.ceil(emails.length / BATCH_SIZE);
       let allPosthogData: Record<string, any> = {};
 
@@ -296,17 +297,34 @@ export const TrafficSyncTool = () => {
             </div>
           )}
 
-          <Table
-            dataSource={data}
-            columns={columns}
-            rowKey="_rowId"
-            pagination={{ defaultPageSize: 10, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'] }}
-            scroll={{ x: "max-content" }}
-            title={() => (
-              <Text strong>
-                Náhľad dát (celkom {data.length} záznamov)
-              </Text>
-            )}
+          <Tabs
+            defaultActiveKey="1"
+            style={{ marginTop: 16 }}
+            items={[
+              {
+                key: "1",
+                label: "Zobrazenie dát (Tabuľka)",
+                children: (
+                  <Table
+                    dataSource={data}
+                    columns={columns}
+                    rowKey="_rowId"
+                    pagination={{ defaultPageSize: 10, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'] }}
+                    scroll={{ x: "max-content" }}
+                    title={() => (
+                      <Text strong>
+                        Náhľad dát (celkom {data.length} záznamov)
+                      </Text>
+                    )}
+                  />
+                )
+              },
+              ...(isSynced ? [{
+                key: "2",
+                label: "Prehľady (Grafy)",
+                children: <TrafficCharts data={data} />
+              }] : [])
+            ]}
           />
         </Space>
       )}

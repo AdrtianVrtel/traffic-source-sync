@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const envSchema = z.object({
   POSTHOG_PROJECT_ID: z.string().min(1, "POSTHOG_PROJECT_ID is required"),
-  POSTHOG_PERSONAL_API_KEY: z.string().min(1, "POSTHOG_PERSONAL_API_KEY is required"),
+  POSTHOG_API_KEY: z.string().min(1, "POSTHOG_API_KEY is required"),
   POSTHOG_HOST: z.string().url().default("https://eu.posthog.com"),
   NEXTAUTH_SECRET: z.string().min(1, "NEXTAUTH_SECRET is required"),
   NEXTAUTH_URL: z.string().url().default("http://localhost:3000"),

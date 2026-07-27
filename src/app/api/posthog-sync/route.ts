@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/options";
-import { env } from "../../../../env";
+import { env } from "@/env";
 
 const fetchWithBackoff = async (url: string, options: RequestInit, retries = 3, backoff = 1000): Promise<Response> => {
   for (let i = 0; i < retries; i++) {
@@ -42,67 +42,47 @@ export async function POST(req: Request) {
 
     // 3. Load PostHog configuration from environment (Validated by Zod)
     const projectId = env.POSTHOG_PROJECT_ID;
-    const personalApiKey = env.POSTHOG_PERSONAL_API_KEY;
+    const personalApiKey = env.POSTHOG_API_KEY;
     const posthogHost = env.POSTHOG_HOST;
 
     // 4. Fetch person properties for each email from PostHog API
-    const CHUNK_SIZE = 10;
+    // Sťahujeme sekvenčne (jeden po druhom) s pauzou, aby sme nevyvolali Rate Limit
     const results: Record<string, any> = {};
     const failedEmails: string[] = [];
 
-    for (let i = 0; i < emails.length; i += CHUNK_SIZE) {
-      const chunk = emails.slice(i, i + CHUNK_SIZE);
-      
-      const promises = chunk.map(async (email) => {
-        try {
-          const url = `${posthogHost}/api/projects/${projectId}/persons/?email=${encodeURIComponent(email)}`;
-          const response = await fetchWithBackoff(url, {
-            headers: {
-              "Authorization": `Bearer ${personalApiKey}`,
-              "Content-Type": "application/json"
-            }
-          });
-
-          if (!response.ok) {
-            return { email, data: null };
+    for (const email of emails) {
+      try {
+        const url = `${posthogHost}/api/projects/${projectId}/persons/?email=${encodeURIComponent(email)}`;
+        const response = await fetchWithBackoff(url, {
+          headers: {
+            "Authorization": `Bearer ${personalApiKey}`,
+            "Content-Type": "application/json"
           }
+        });
 
+        if (!response.ok) {
+          failedEmails.push(email);
+        } else {
           const data = await response.json();
-          // PostHog returns { results: [...] }
           if (data.results && data.results.length > 0) {
             const person = data.results[0];
             const props = person.properties || {};
             
-            return {
-              email,
-              data: {
-                source: props["Original Traffic Source"] || props["$initial_utm_source"] || "",
-                drillDown1: props["Original Traffic Source Drill-Down 1"] || props["$initial_utm_medium"] || "",
-                drillDown2: props["Original Traffic Source Drill-Down 2"] || props["$initial_utm_campaign"] || "",
-              }
+            results[email] = {
+              source: props["Original Traffic Source"] || props["$initial_utm_source"] || "",
+              drillDown1: props["Original Traffic Source Drill-Down 1"] || props["$initial_utm_medium"] || "",
+              drillDown2: props["Original Traffic Source Drill-Down 2"] || props["$initial_utm_campaign"] || "",
             };
+          } else {
+            failedEmails.push(email);
           }
-
-          return { email, data: null };
-        } catch (error) {
-          return { email, data: null };
         }
-      });
-
-      const chunkResults = await Promise.all(promises);
-      
-      chunkResults.forEach((res) => {
-        if (res.data) {
-          results[res.email] = res.data;
-        } else {
-          failedEmails.push(res.email);
-        }
-      });
-
-      // Small delay between chunks to be nice to the API
-      if (i + CHUNK_SIZE < emails.length) {
-        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        failedEmails.push(email);
       }
+
+      // Striktná pauza 150ms po KAŽDOM maily, aby sme neprekročili limit PostHogu (bezpečný Drip-feeding)
+      await new Promise(resolve => setTimeout(resolve, 150));
     }
 
     // 5. Return the mapped results
