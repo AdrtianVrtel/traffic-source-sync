@@ -65,14 +65,70 @@ export async function POST(req: Request) {
         } else {
           const data = await response.json();
           if (data.results && data.results.length > 0) {
-            const person = data.results[0];
-            const props = person.properties || {};
+            // 1. Zoradíme profily podľa dátumu vytvorenia (od najstaršieho po najnovší)
+            const sortedPersons = data.results.sort((a: any, b: any) => {
+              const dateA = new Date(a.created_at || 0).getTime();
+              const dateB = new Date(b.created_at || 0).getTime();
+              return dateA - dateB;
+            });
+
+            // 2. Nájdeme najstarší profil, ktorý skutočne obsahuje nejaké traffic data
+            let selectedPerson = sortedPersons[0]; // Ak nenájdeme nič lepšie, berieme úplne najstarší
+            for (const p of sortedPersons) {
+              const pr = p.properties || {};
+              const hasSourceInfo = 
+                pr["Original Traffic Source"] || 
+                pr["$initial_utm_source"] || 
+                pr["$initial_referring_domain"] || 
+                (pr["$initial_current_url"] && pr["$initial_current_url"].includes("fbclid=")) ||
+                (pr["$initial_current_url"] && pr["$initial_current_url"].includes("gclid="));
+                
+              if (hasSourceInfo) {
+                selectedPerson = p;
+                break; // Našli sme najstarší s dátami, končíme hľadanie
+              }
+            }
+
+            // 3. Vytiahneme z neho dáta s inteligentným Fallbackom
+            const props = selectedPerson.properties || {};
             
-            results[email] = {
-              source: props["Original Traffic Source"] || props["$initial_utm_source"] || "",
-              drillDown1: props["Original Traffic Source Drill-Down 1"] || props["$initial_utm_medium"] || "",
-              drillDown2: props["Original Traffic Source Drill-Down 2"] || props["$initial_utm_campaign"] || "",
-            };
+            let source = props["Original Traffic Source"] || props["$initial_utm_source"] || "";
+            let drillDown1 = props["Original Traffic Source Drill-Down 1"] || props["$initial_utm_medium"] || "";
+            let drillDown2 = props["Original Traffic Source Drill-Down 2"] || props["$initial_utm_campaign"] || "";
+
+            // Ak stále nemáme source (chýbajú UTM parametre), skúsime ho odhadnúť z referrera alebo URL (napr. fbclid)
+            if (!source) {
+              let referringDomain = props["$initial_referring_domain"] || props["$referring_domain"] || "";
+              const currentUrl = props["$initial_current_url"] || props["$current_url"] || "";
+
+              // Ošetríme špecifický PostHog prípad, kedy referrer je text "$direct"
+              if (referringDomain === "$direct") {
+                referringDomain = "";
+              }
+
+              if (currentUrl.includes("fbclid=")) {
+                source = "facebook";
+                if (!drillDown1) drillDown1 = "cpc"; // Ak to má fbclid, zväčša je to platený klik
+              } else if (currentUrl.includes("gclid=")) {
+                source = "google";
+                if (!drillDown1) drillDown1 = "cpc"; // gclid je jednoznačne Google Ads
+              } else if (referringDomain) {
+                if (referringDomain.includes("facebook.com") || referringDomain.includes("instagram.com")) {
+                  source = "facebook";
+                  if (!drillDown1) drillDown1 = "referral";
+                } else if (referringDomain.includes("google.")) {
+                  source = "google";
+                  if (!drillDown1) drillDown1 = "organic";
+                } else {
+                  source = referringDomain;
+                  if (!drillDown1) drillDown1 = "referral";
+                }
+              } else {
+                source = "$direct"; // Ak nie je ani UTM, ani referrer, ani gclid/fbclid
+              }
+            }
+
+            results[email] = { source, drillDown1, drillDown2 };
           } else {
             failedEmails.push(email);
           }
