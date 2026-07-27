@@ -27,7 +27,7 @@ export const authProvider: AuthProvider = {
     };
   },
   logout: async () => {
-    await signOut({ redirect: true, callbackUrl: "/login" });
+    await signOut({ redirect: true, callbackUrl: `${window.location.origin}/login` });
     return {
       success: true,
     };
@@ -56,7 +56,7 @@ export const authProvider: AuthProvider = {
       if (session?.user) {
         return {
           id: session.user.email ?? "1",
-          name: session.user.name,
+          name: session.user.email,
           email: session.user.email,
           avatar: session.user.image,
         };

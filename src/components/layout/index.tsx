@@ -9,7 +9,8 @@ export const Layout = ({ children }: React.PropsWithChildren) => {
       Title={({ collapsed }) => (
         <ThemedTitle
           collapsed={collapsed}
-          text="Traffic Sync Tool"
+          text="IIS Tooling"
+          icon={<img src="/logo.png" alt="Logo" width={24} height={24} style={{ borderRadius: 4 }} />}
         />
       )}
     >
