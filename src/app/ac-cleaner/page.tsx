@@ -3,25 +3,25 @@
 import { Authenticated, CanAccess } from "@refinedev/core";
 import { Alert } from "antd";
 import { Layout } from "@/components/layout";
-import { TrafficSyncTool } from "@/components/traffic-sync-tool";
+import { AcCleanerTool } from "@/components/ac-cleaner";
 
-export default function Home() {
+export default function AcCleanerPage() {
   return (
-    <Authenticated key="home-page" fallback={<div style={{ padding: 24 }}>Načítavam...</div>}>
+    <Authenticated key="ac-cleaner-page" fallback={<div style={{ padding: 24 }}>Načítavam...</div>}>
       <Layout>
         <CanAccess
-          resource="traffic-sync"
+          resource="ac-cleaner"
           action="list"
           fallback={
             <Alert
               type="warning"
               showIcon
               message="Nedostatočné oprávnenia"
-              description="K nástroju Traffic Source Sync nemáte prístup. Kontaktujte administrátora."
+              description="K nástroju ActiveCampaign Cleaner nemáte prístup. Kontaktujte administrátora."
             />
           }
         >
-          <TrafficSyncTool />
+          <AcCleanerTool />
         </CanAccess>
       </Layout>
     </Authenticated>

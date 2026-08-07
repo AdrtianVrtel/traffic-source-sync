@@ -2,6 +2,7 @@
   "name": "traffic-source-sync",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.8.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -15,6 +16,8 @@
     "@refinedev/core": "^5.0.12",
     "@refinedev/nextjs-router": "^7.0.5",
     "antd": "^5.29.3",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-orm": "^0.45.2",
     "html2canvas": "^1.4.1",
     "next": "16.2.12",
     "next-auth": "^4.24.15",
@@ -26,10 +29,20 @@
     "xlsx": "^0.18.5",
     "zod": "^4.4.3"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "typescript": "^5"

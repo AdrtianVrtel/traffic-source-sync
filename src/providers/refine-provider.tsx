@@ -1,12 +1,13 @@
 "use client";
 
-import { Refine } from "@refinedev/core";
+import { Refine, type AccessControlProvider } from "@refinedev/core";
 import routerProvider from "@refinedev/nextjs-router/app";
 import { usePathname } from "next/navigation";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, getSession } from "next-auth/react";
 import { ConfigProvider, App as AntdApp } from "antd";
 import { authProvider } from "./auth-provider";
-import { UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined, ClearOutlined } from "@ant-design/icons";
+import { ALL_TOOL_KEYS } from "@/lib/tools";
 import "@refinedev/antd/dist/reset.css";
 
 // Týmto potlačíme neškodný warning z knižnice Refine a Antd, aby Next.js nevyhadzoval červený overlay na obrazovku
@@ -20,6 +21,23 @@ if (typeof window !== "undefined") {
     originalError(...args);
   };
 }
+
+// Riadi viditeľnosť položiek v menu aj prístup k stránkam (cez <CanAccess>).
+// Admin vidí všetko, user len nástroje povolené v DB. Skutočná ochrana dát
+// je na serveri v API routes (requireTool/requireAdmin).
+const accessControlProvider: AccessControlProvider = {
+  can: async ({ resource }) => {
+    const session = await getSession();
+    const role = session?.user?.role;
+    if (!role) return { can: false };
+    if (role === "admin") return { can: true };
+    if (resource && (ALL_TOOL_KEYS as string[]).includes(resource)) {
+      return { can: (session?.user?.tools ?? []).includes(resource as (typeof ALL_TOOL_KEYS)[number]) };
+    }
+    // Všetko ostatné (napr. správa používateľov) je len pre adminov
+    return { can: false };
+  },
+};
 
 export function RefineProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -43,6 +61,7 @@ export function RefineProvider({ children }: { children: React.ReactNode }) {
             routerProvider={routerProvider}
             authProvider={authProvider}
             dataProvider={dataProvider}
+            accessControlProvider={accessControlProvider}
             resources={[
               {
                 name: "traffic-sync",
@@ -50,6 +69,14 @@ export function RefineProvider({ children }: { children: React.ReactNode }) {
                 meta: {
                   label: "Traffic Source Sync",
                   icon: <UploadOutlined />,
+                },
+              },
+              {
+                name: "ac-cleaner",
+                list: "/ac-cleaner",
+                meta: {
+                  label: "ActiveCampaign Cleaner",
+                  icon: <ClearOutlined />,
                 },
               },
             ]}

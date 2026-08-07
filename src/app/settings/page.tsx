@@ -3,25 +3,25 @@
 import { Authenticated, CanAccess } from "@refinedev/core";
 import { Alert } from "antd";
 import { Layout } from "@/components/layout";
-import { TrafficSyncTool } from "@/components/traffic-sync-tool";
+import { UserManagement } from "@/components/user-management";
 
-export default function Home() {
+export default function SettingsPage() {
   return (
-    <Authenticated key="home-page" fallback={<div style={{ padding: 24 }}>Načítavam...</div>}>
+    <Authenticated key="settings-page" fallback={<div style={{ padding: 24 }}>Načítavam...</div>}>
       <Layout>
         <CanAccess
-          resource="traffic-sync"
+          resource="users"
           action="list"
           fallback={
             <Alert
               type="warning"
               showIcon
               message="Nedostatočné oprávnenia"
-              description="K nástroju Traffic Source Sync nemáte prístup. Kontaktujte administrátora."
+              description="Správa používateľov je dostupná len administrátorom."
             />
           }
         >
-          <TrafficSyncTool />
+          <UserManagement />
         </CanAccess>
       </Layout>
     </Authenticated>

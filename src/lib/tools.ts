@@ -1,0 +1,12 @@
+// Centrálny register nástrojov - pri pridaní nového nástroja ho stačí doplniť sem,
+// automaticky sa objaví v správe používateľov aj v kontrole prístupov.
+// Kľúč musí sedieť s názvom Refine resource.
+
+export const TOOLS = [
+  { key: "traffic-sync", label: "Traffic Source Sync", path: "/" },
+  { key: "ac-cleaner", label: "ActiveCampaign Cleaner", path: "/ac-cleaner" },
+] as const;
+
+export type ToolKey = (typeof TOOLS)[number]["key"];
+
+export const ALL_TOOL_KEYS: ToolKey[] = TOOLS.map((t) => t.key);

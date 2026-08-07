@@ -33,14 +33,34 @@ POSTHOG_PERSONAL_API_KEY=vas_personal_api_key
 # Voliteľné: ak používate európsky PostHog, nechajte tak. Ak americký, zmeňte na https://app.posthog.com
 POSTHOG_HOST=https://eu.posthog.com
 
-# Prístupy - Admin
+# Prístupy - Admin (pri prvom štarte sa seedne do DB ako admin)
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=silne_heslo_123
 
-# Prístupy - Druhý používateľ
+# Prístupy - Druhý používateľ (seedne sa ako user so všetkými nástrojmi)
+# Pozn.: seed prebehne len ak konto v DB ešte neexistuje. Ďalšia správa používateľov
+# (roly, prístupy k nástrojom, noví používatelia) sa robí v appke na stránke
+# "Správa používateľov" - zmeny v DB sa pri reštarte NEprepisujú hodnotami z env.
 USER2_EMAIL=kolega@example.com
 USER2_PASSWORD=silne_heslo_456
+
+# ActiveCampaign Cleaner (voliteľné - bez nich je AC Cleaner vypnutý, zvyšok appky funguje)
+AC_API_URL=https://vasucet.api-us1.com
+AC_API_KEY=vas_ac_api_kluc
+# Poistka: "dry-run" nič reálne neodošle do AC, len loguje. Po odsúhlasení zmeňte na "live".
+AC_ARCHIVE_MODE=dry-run
+
+# Cesta k SQLite databáze (v Dockeri je default /app/data/app.db, netreba meniť)
+# DATABASE_PATH=/app/data/app.db
 ```
+
+## 3b. Persistent volume pre SQLite (DÔLEŽITÉ pre AC Cleaner)
+ActiveCampaign Cleaner si ukladá históriu behov do SQLite databázy v `/app/data`. Bez volume sa databáza zmaže pri každom redeployi.
+
+1. V Coolify otvorte aplikáciu -> **Persistent Storage** -> **Add**.
+2. Zvoľte typ **Volume Mount** a ako **Destination Path** zadajte `/app/data`.
+   (Mountujte celý adresár, nie single file - SQLite si vedľa databázy vytvára pomocné súbory `-wal` a `-shm`.)
+3. Uložte a redeploynite.
 
 ## 4. Nasadenie (Deploy)
 1. Po uložení všetkých premenných kliknite v Coolify na tlačidlo **Deploy**.

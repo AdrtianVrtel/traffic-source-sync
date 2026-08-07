@@ -56,7 +56,7 @@ export const authProvider: AuthProvider = {
       if (session?.user) {
         return {
           id: session.user.email ?? "1",
-          name: session.user.email,
+          name: session.user.nickname || session.user.email,
           email: session.user.email,
           avatar: session.user.image,
         };

@@ -1,5 +1,10 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { verifyPassword } from "@/lib/auth/password";
+import type { ToolKey } from "@/lib/tools";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,23 +19,18 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const user1Email = process.env.ADMIN_EMAIL || "admin@example.com";
-        const user1Password = process.env.ADMIN_PASSWORD || "password123";
-        
-        const user2Email = process.env.USER2_EMAIL || "user@example.com";
-        const user2Password = process.env.USER2_PASSWORD || "password123";
+        const email = credentials.email.toLowerCase().trim();
+        const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
-        // Kontrola pre prvého používateľa
-        if (credentials.email === user1Email && credentials.password === user1Password) {
-          return { id: "1", name: "Admin User", email: user1Email };
+        // Pending používatelia (bez hesla) sa prihlásiť nemôžu - najprv musia dokončiť registráciu
+        if (!user || user.status !== "active" || !user.passwordHash) {
+          return null;
+        }
+        if (!verifyPassword(credentials.password, user.passwordHash)) {
+          return null;
         }
 
-        // Kontrola pre druhého používateľa
-        if (credentials.email === user2Email && credentials.password === user2Password) {
-          return { id: "2", name: "Secondary User", email: user2Email };
-        }
-
-        return null;
+        return { id: String(user.id), name: user.email, email: user.email };
       },
     }),
   ],
@@ -39,5 +39,43 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+  },
+  callbacks: {
+    // Rola a prístupy sa čítajú z DB pri každom requeste - zmeny spravené adminom
+    // sa tak prejavia okamžite, bez nutnosti odhlásenia
+    async jwt({ token }) {
+      if (token.email) {
+        const [dbUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, token.email.toLowerCase()))
+          .limit(1);
+
+        if (dbUser && dbUser.status === "active") {
+          token.uid = String(dbUser.id);
+          token.role = dbUser.role;
+          token.nickname = dbUser.nickname;
+          try {
+            token.tools = JSON.parse(dbUser.allowedTools) as ToolKey[];
+          } catch {
+            token.tools = [];
+          }
+        } else {
+          // Používateľ bol medzičasom zmazaný/deaktivovaný
+          token.role = undefined;
+          token.tools = [];
+        }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.uid ?? "";
+        session.user.role = token.role;
+        session.user.tools = token.tools ?? [];
+        session.user.nickname = token.nickname ?? null;
+      }
+      return session;
+    },
   },
 };

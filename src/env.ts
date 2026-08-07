@@ -10,6 +10,12 @@ const envSchema = z.object({
   ADMIN_PASSWORD: z.string().min(6).optional(),
   USER2_EMAIL: z.string().email("USER2_EMAIL must be a valid email").optional(),
   USER2_PASSWORD: z.string().min(6).optional(),
+  DATABASE_PATH: z.string().default("./data/app.db"),
+  // ActiveCampaign - voliteľné, kým nedostaneme prístupy. Bez nich je AC Cleaner nefunkčný, ale appka beží.
+  AC_API_URL: z.string().url().optional(),
+  AC_API_KEY: z.string().min(1).optional(),
+  // Poistka: kým nie je "live", archivácia nič reálne neodošle do AC, len loguje a zapisuje históriu.
+  AC_ARCHIVE_MODE: z.enum(["dry-run", "live"]).default("dry-run"),
 });
 
 const _env = envSchema.safeParse(process.env);
