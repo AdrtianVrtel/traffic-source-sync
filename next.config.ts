@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  // Odstránenie console.log v produkcii (okrem error a warn)
+  outputFileTracingIncludes: {
+    '/*': ['./node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3/prebuilds/**/*'],
+  },
   compiler: {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
   },

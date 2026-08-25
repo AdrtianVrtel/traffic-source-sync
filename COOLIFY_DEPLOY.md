@@ -8,7 +8,11 @@ Pre úspešné nasadenie postupujte podľa týchto krokov v Coolify administrác
 1. V Coolify kliknite na **Add New Resource** -> **Project** -> Vytvorte si projekt (napr. *Traffic Sync*).
 2. Zvoľte **Application**.
 3. Vyberte Git poskytovateľa (napr. GitHub, GitLab), zvoľte váš repozitár a branch (väčšinou `main` alebo `master`).
-4. Ako Build Pack zvoľte **Docker** (Coolify by ho mal vďaka prítomnému súboru `Dockerfile` detegovať automaticky).
+4. Build Pack: funguje **Nixpacks** (default) aj **Dockerfile**.
+   - **Nixpacks** — netreba nič nastavovať, appka sa zbuilduje sama.
+   - **Dockerfile** — použije priložený `Dockerfile`, výsledný image je výrazne menší (multi-stage build, alpine) a beží pod non-root používateľom.
+
+   Pri oboch variantách sa databáza očakáva v `/app/data` (viď sekcia 3b).
 
 ## 2. Nastavenie domény a portu
 V nastaveniach aplikácie v Coolify (Configuration):
