@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import { Button, Radio, Select, Space, Table, Tag, Tooltip, Typography } from "antd";
+import { Button, Empty, Select, Space, Table, Tag, Tooltip, Typography } from "antd";
 import { CheckOutlined, UndoOutlined } from "@ant-design/icons";
 import { formatDate } from "@/shared/utils/format-date";
 import { MentionSnippet } from "./MentionSnippet";
 import { SourceFavicon } from "./SourceFavicon";
-import type { Mention, ReadFilter, TrackedTerm } from "../types";
+import type { Mention, TrackedTerm } from "../types";
 
 const { Link: AntLink } = Typography;
 
@@ -18,9 +18,9 @@ interface MentionsTableProps {
   page: number;
   pageSize: number;
   filterTermId: number | null;
-  filterRead: ReadFilter;
+  emptyText?: string;
+  totalSuffix?: string;
   onFilterTermChange: (termId: number | null) => void;
-  onFilterReadChange: (filter: ReadFilter) => void;
   onPageChange: (page: number, pageSize: number) => void;
   onMarkRead: (mention: Mention, isRead: boolean) => void;
 }
@@ -33,9 +33,9 @@ export const MentionsTable = ({
   page,
   pageSize,
   filterTermId,
-  filterRead,
+  emptyText,
+  totalSuffix = "zmienok",
   onFilterTermChange,
-  onFilterReadChange,
   onPageChange,
   onMarkRead,
 }: MentionsTableProps) => {
@@ -105,38 +105,27 @@ export const MentionsTable = ({
 
   return (
     <Space direction="vertical" style={{ width: "100%" }}>
-      <Space wrap>
-        <Select
-          allowClear
-          placeholder="Všetky kľúčové slová"
-          style={{ minWidth: 220 }}
-          value={filterTermId ?? undefined}
-          options={terms.map((t) => ({ label: t.term, value: t.id }))}
-          onChange={(value) => onFilterTermChange(value ?? null)}
-        />
-        <Radio.Group
-          value={filterRead}
-          onChange={(e) => onFilterReadChange(e.target.value)}
-          options={[
-            { label: "Všetky", value: "all" },
-            { label: "Neprečítané", value: "unread" },
-            { label: "Prečítané", value: "read" },
-          ]}
-          optionType="button"
-          buttonStyle="solid"
-        />
-      </Space>
+      <Select
+        allowClear
+        placeholder="Všetky kľúčové slová"
+        style={{ minWidth: 220 }}
+        value={filterTermId ?? undefined}
+        options={terms.map((t) => ({ label: t.term, value: t.id }))}
+        onChange={(value) => onFilterTermChange(value ?? null)}
+      />
       <Table
         dataSource={mentions}
         columns={columns}
         rowKey="id"
         loading={loading}
         scroll={{ x: "max-content" }}
+        locale={emptyText ? { emptyText: <Empty description={emptyText} /> } : undefined}
         pagination={{
           current: page,
           pageSize,
           total,
           showSizeChanger: true,
+          showTotal: (t) => `Celkom ${t} ${totalSuffix}`,
           onChange: onPageChange,
         }}
       />

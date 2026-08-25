@@ -30,11 +30,12 @@ export interface LastRun {
   errorMessage: string | null;
 }
 
-export type ReadFilter = "all" | "unread" | "read";
+export type MentionsTab = "new" | "all" | "terms";
 
 export interface MentionsPage {
   mentions: Mention[];
   total: number;
+  totalCount: number;
   unreadCount: number;
   configured: boolean;
   lastRun: LastRun | null;

@@ -53,11 +53,14 @@ export async function GET(req: Request) {
     .from(mentions)
     .where(eq(mentions.isRead, false));
 
+  const [{ totalCount }] = await db.select({ totalCount: sql<number>`count(*)` }).from(mentions);
+
   const [lastRun] = await db.select().from(fetchRuns).orderBy(desc(fetchRuns.id)).limit(1);
 
   return NextResponse.json({
     mentions: rows,
     total,
+    totalCount,
     unreadCount,
     page,
     pageSize,

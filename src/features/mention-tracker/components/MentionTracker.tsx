@@ -6,7 +6,7 @@ import { CheckOutlined, SyncOutlined } from "@ant-design/icons";
 import { formatDate } from "@/shared/utils/format-date";
 import { MentionsTable } from "./MentionsTable";
 import { TermsTable } from "./TermsTable";
-import type { LastRun, Mention, MentionsPage, ReadFilter, TrackedTerm } from "../types";
+import type { LastRun, Mention, MentionsPage, MentionsTab, TrackedTerm } from "../types";
 
 const { Title, Text } = Typography;
 
@@ -21,22 +21,22 @@ export const MentionTrackerTool = () => {
   const [lastRun, setLastRun] = useState<LastRun | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [total, setTotal] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [filterTermId, setFilterTermId] = useState<number | null>(null);
-  const [filterRead, setFilterRead] = useState<ReadFilter>("all");
+  const [activeTab, setActiveTab] = useState<MentionsTab>("new");
 
   const fetchMentionsData = useCallback(async (): Promise<MentionsPage> => {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (filterTermId) params.set("termId", String(filterTermId));
-    if (filterRead === "unread") params.set("read", "false");
-    if (filterRead === "read") params.set("read", "true");
+    if (activeTab === "new") params.set("read", "false");
 
     const response = await fetch(`/api/mention-tracker/mentions?${params.toString()}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data?.error || "Nepodarilo sa načítať zmienky.");
     return data;
-  }, [page, pageSize, filterTermId, filterRead]);
+  }, [page, pageSize, filterTermId, activeTab]);
 
   const fetchTermsData = useCallback(async (): Promise<{ terms: TrackedTerm[] }> => {
     const response = await fetch("/api/mention-tracker/terms");
@@ -48,6 +48,7 @@ export const MentionTrackerTool = () => {
   const applyMentionsData = (data: MentionsPage) => {
     setMentionList(data.mentions);
     setTotal(data.total);
+    setTotalCount(data.totalCount);
     setUnreadCount(data.unreadCount);
     setConfigured(data.configured);
     setLastRun(data.lastRun);
@@ -102,7 +103,12 @@ export const MentionTrackerTool = () => {
         body: JSON.stringify({ isRead }),
       });
       if (!response.ok) throw new Error("Zmena zlyhala.");
-      setMentionList((prev) => prev.map((m) => (m.id === mention.id ? { ...m, isRead } : m)));
+      if (activeTab === "new" && isRead) {
+        setMentionList((prev) => prev.filter((m) => m.id !== mention.id));
+        setTotal((prev) => Math.max(0, prev - 1));
+      } else {
+        setMentionList((prev) => prev.map((m) => (m.id === mention.id ? { ...m, isRead } : m)));
+      }
       setUnreadCount((prev) => prev + (isRead ? -1 : 1));
       emitMentionsUpdated();
     } catch (error) {
@@ -214,13 +220,17 @@ export const MentionTrackerTool = () => {
         </Space>
 
         <Tabs
-          defaultActiveKey="mentions"
+          activeKey={activeTab}
+          onChange={(key) => {
+            setPage(1);
+            setActiveTab(key as MentionsTab);
+          }}
           items={[
             {
-              key: "mentions",
+              key: "new",
               label: (
                 <Space size={6}>
-                  Zmienky
+                  Nové zmienky
                   <Badge count={unreadCount} color="red" />
                 </Space>
               ),
@@ -233,13 +243,34 @@ export const MentionTrackerTool = () => {
                   page={page}
                   pageSize={pageSize}
                   filterTermId={filterTermId}
-                  filterRead={filterRead}
+                  emptyText="Žiadne nové zmienky"
+                  totalSuffix="nových zmienok"
                   onFilterTermChange={(termId) => {
                     setFilterTermId(termId);
                     setPage(1);
                   }}
-                  onFilterReadChange={(filter) => {
-                    setFilterRead(filter);
+                  onPageChange={(nextPage, nextPageSize) => {
+                    setPage(nextPage);
+                    setPageSize(nextPageSize);
+                  }}
+                  onMarkRead={handleMarkRead}
+                />
+              ),
+            },
+            {
+              key: "all",
+              label: `Zmienky (${totalCount})`,
+              children: (
+                <MentionsTable
+                  mentions={mentionList}
+                  terms={terms}
+                  loading={loading}
+                  total={total}
+                  page={page}
+                  pageSize={pageSize}
+                  filterTermId={filterTermId}
+                  onFilterTermChange={(termId) => {
+                    setFilterTermId(termId);
                     setPage(1);
                   }}
                   onPageChange={(nextPage, nextPageSize) => {
