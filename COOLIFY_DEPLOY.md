@@ -52,6 +52,14 @@ AC_ARCHIVE_MODE=dry-run
 
 # Cesta k SQLite databáze (v Dockeri je default /app/data/app.db, netreba meniť)
 # DATABASE_PATH=/app/data/app.db
+
+# Mention Tracker (voliteľné - bez nich je Mention Tracker vypnutý, zvyšok appky funguje)
+TAVILY_API_KEY=tvly-vas_api_kluc
+# Náhodný string pre cron endpoint (vygenerujte napr.: openssl rand -hex 32)
+CRON_SECRET=sem_vlozte_nahodny_string
+# Voliteľný webhook pre notifikácie o nových zmienkach (Slack Incoming Webhook / n8n / Zapier).
+# Nenastavené = žiadne externé notifikácie, len in-app unread badge.
+# NOTIFICATION_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
 ## 3b. Persistent volume pre SQLite (DÔLEŽITÉ pre AC Cleaner)
@@ -61,6 +69,17 @@ ActiveCampaign Cleaner si ukladá históriu behov do SQLite databázy v `/app/da
 2. Zvoľte typ **Volume Mount** a ako **Destination Path** zadajte `/app/data`.
    (Mountujte celý adresár, nie single file - SQLite si vedľa databázy vytvára pomocné súbory `-wal` a `-shm`.)
 3. Uložte a redeploynite.
+
+## 3c. Scheduled Task pre Mention Tracker
+Pravidelný fetch zmienok spúšťa natívna Coolify funkcia **Scheduled Tasks** (appka nemá vlastný cron).
+
+1. V Coolify otvorte aplikáciu -> tab **Scheduled Tasks** -> **Add**.
+2. **Cron expression:** `0 */6 * * *` (každých 6 hodín; frekvencia sa dá kedykoľvek zmeniť bez redeployu).
+3. **Command** (image je node:20-alpine bez curl, preto node one-liner - Node 18+ má fetch vstavaný):
+```
+node -e "fetch('http://localhost:3000/api/cron/fetch-mentions',{method:'POST',headers:{Authorization:'Bearer '+process.env.CRON_SECRET}}).then(r=>r.text()).then(console.log).catch(e=>{console.error(e);process.exit(1)})"
+```
+4. Prvý beh overte priamo v logoch scheduled tasku v Coolify - v odpovedi má byť JSON s počtami (`resultsCount`, `newMentionsCount`). Endpoint má guard proti súbežnému behu, takže prekrývajúce sa spustenia sa bezpečne preskočia (`skipped: true`).
 
 ## 4. Nasadenie (Deploy)
 1. Po uložení všetkých premenných kliknite v Coolify na tlačidlo **Deploy**.

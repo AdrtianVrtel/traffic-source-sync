@@ -1,4 +1,4 @@
-import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
+import { sqliteTable, integer, text, real } from "drizzle-orm/sqlite-core";
 
 // Používateľské kontá. Env premenné ADMIN_* a USER2_* sa pri štarte seednu sem,
 // ďalej sa všetko (role, prístupy k nástrojom) spravuje výhradne v DB.
@@ -34,6 +34,48 @@ export const syncHistory = sqliteTable("sync_history", {
   hardMatches: integer("hard_matches").notNull().default(0),
   softMatches: integer("soft_matches").notNull().default(0),
   error: text("error"),
+});
+
+// Mention Tracker: sledované kľúčové slová (spravované cez UI)
+export const trackedTerms = sqliteTable("tracked_terms", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  // Plain text zadaný používateľom, napr. "Invest in Slovakia"
+  term: text("term").notNull().unique(),
+  // Odvodené automaticky pri uložení - obalenie do úvodzoviek pre Tavily exact match
+  query: text("query").notNull(),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull(),
+});
+
+// Mention Tracker: nájdené zmienky (URL je unique globálne = deduplikácia)
+export const mentions = sqliteTable("mentions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  termId: integer("term_id").notNull(),
+  url: text("url").notNull().unique(),
+  title: text("title").notNull().default(""),
+  snippet: text("snippet").notNull().default(""),
+  sourceDomain: text("source_domain").notNull().default(""),
+  faviconUrl: text("favicon_url"),
+  publishedDate: text("published_date"),
+  score: real("score"),
+  isRead: integer("is_read", { mode: "boolean" }).notNull().default(false),
+  firstSeenAt: text("first_seen_at").notNull(),
+});
+
+// Mention Tracker: história behov - observabilita + guard proti súbežnému behu
+export const fetchRuns = sqliteTable("fetch_runs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  trigger: text("trigger", { enum: ["cron", "manual"] })
+    .notNull()
+    .default("cron"),
+  runAt: text("run_at").notNull(),
+  status: text("status", { enum: ["running", "success", "error"] })
+    .notNull()
+    .default("running"),
+  resultsCount: integer("results_count").notNull().default(0),
+  newMentionsCount: integer("new_mentions_count").notNull().default(0),
+  creditsUsed: integer("credits_used").notNull().default(0),
+  errorMessage: text("error_message"),
 });
 
 // Záznam o každom kontakte odoslanom na archiváciu (aj v dry-run režime)

@@ -7,5 +7,5 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: ["/", "/ac-cleaner", "/settings", "/profile"],
+  matcher: ["/", "/ac-cleaner", "/mention-tracker", "/settings", "/profile"],
 };

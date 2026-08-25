@@ -3,19 +3,16 @@
 import React from "react";
 import { Layout as AntdLayout, Avatar, Dropdown, Space, Typography, theme } from "antd";
 import type { MenuProps } from "antd";
-import {
-  DownOutlined,
-  LogoutOutlined,
-  SettingOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { DownOutlined, LogoutOutlined, SettingOutlined, TeamOutlined, UserOutlined } from "@ant-design/icons";
 import { useSession } from "next-auth/react";
 import { useLogout } from "@refinedev/core";
 import { useRouter } from "next/navigation";
 
 // Vlastná hlavička namiesto ThemedHeader z Refine: e-mail/prezývka vpravo hore
-// s hover dropdownom (profil, správa používateľov pre adminov, odhlásenie)
+// s hover dropdownom (profil, správa používateľov pre adminov, odhlásenie).
+// Unread badge pre Mention Tracker žije v sidebari pri danej položke menu
+// (src/providers/refine-provider.tsx) - v hlavičke by pôsobil ako appka-wide
+// notifikácia, hoci sa týka len jedného nástroja.
 export const Header = () => {
   const { token } = theme.useToken();
   const { data: session } = useSession();

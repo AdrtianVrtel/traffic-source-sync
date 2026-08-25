@@ -29,6 +29,36 @@ CREATE TABLE IF NOT EXISTS archived_contacts (
   mode TEXT NOT NULL,
   archived_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS tracked_terms (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  term TEXT NOT NULL UNIQUE,
+  query TEXT NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS mentions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  term_id INTEGER NOT NULL,
+  url TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL DEFAULT '',
+  snippet TEXT NOT NULL DEFAULT '',
+  source_domain TEXT NOT NULL DEFAULT '',
+  favicon_url TEXT,
+  published_date TEXT,
+  score REAL,
+  is_read INTEGER NOT NULL DEFAULT 0,
+  first_seen_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS fetch_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  trigger TEXT NOT NULL DEFAULT 'cron',
+  run_at TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'running',
+  results_count INTEGER NOT NULL DEFAULT 0,
+  new_mentions_count INTEGER NOT NULL DEFAULT 0,
+  credits_used INTEGER NOT NULL DEFAULT 0,
+  error_message TEXT
+);
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT NOT NULL UNIQUE,
@@ -48,6 +78,11 @@ function migrate(sqlite: Database.Database) {
   const userColumns = sqlite.prepare(`PRAGMA table_info(users)`).all() as { name: string }[];
   if (!userColumns.some((c) => c.name === "nickname")) {
     sqlite.exec(`ALTER TABLE users ADD COLUMN nickname TEXT`);
+  }
+
+  const mentionColumns = sqlite.prepare(`PRAGMA table_info(mentions)`).all() as { name: string }[];
+  if (mentionColumns.length > 0 && !mentionColumns.some((c) => c.name === "favicon_url")) {
+    sqlite.exec(`ALTER TABLE mentions ADD COLUMN favicon_url TEXT`);
   }
 }
 
@@ -79,6 +114,16 @@ function seedUsersFromEnv(sqlite: Database.Database) {
   seed(env.USER2_EMAIL, env.USER2_PASSWORD, "user");
 }
 
+// Seed počiatočných kľúčových slov pre Mention Tracker (ďalšie sa pridávajú cez UI)
+function seedTrackedTerms(sqlite: Database.Database) {
+  const insert = sqlite.prepare(
+    `INSERT OR IGNORE INTO tracked_terms (term, query, created_at) VALUES (?, ?, ?)`
+  );
+  for (const term of ["Invest in Slovakia", "investinslovakia.eu"]) {
+    insert.run(term, `"${term}"`, new Date().toISOString());
+  }
+}
+
 function createDb() {
   const dbPath = path.resolve(env.DATABASE_PATH);
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -87,6 +132,7 @@ function createDb() {
   sqlite.exec(DDL);
   migrate(sqlite);
   seedUsersFromEnv(sqlite);
+  seedTrackedTerms(sqlite);
   return drizzle(sqlite, { schema });
 }
 

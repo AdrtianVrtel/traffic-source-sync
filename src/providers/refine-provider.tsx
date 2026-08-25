@@ -8,6 +8,7 @@ import { ConfigProvider, App as AntdApp } from "antd";
 import { authProvider } from "./auth-provider";
 import { UploadOutlined, ClearOutlined } from "@ant-design/icons";
 import { ALL_TOOL_KEYS } from "@/lib/tools";
+import { MentionTrackerIcon } from "@/components/mention-tracker/sidebar-icon";
 import "@refinedev/antd/dist/reset.css";
 
 // Týmto potlačíme neškodný warning z knižnice Refine a Antd, aby Next.js nevyhadzoval červený overlay na obrazovku
@@ -39,19 +40,52 @@ const accessControlProvider: AccessControlProvider = {
   },
 };
 
+// We can add dummy dataProvider since we are just building tools
+const dataProvider = {
+  getList: async () => ({ data: [], total: 0 }),
+  getOne: async () => ({ data: {} as any }),
+  update: async () => ({ data: {} as any }),
+  create: async () => ({ data: {} as any }),
+  deleteOne: async () => ({ data: {} as any }),
+  getApiUrl: () => "",
+  getCustom: async () => ({ data: {} as any }),
+};
+
+// Musí byť stabilná konštanta MIMO komponentu (nie inline v JSX) - Refine's <CanAccess>
+// (cez useCan) volá accessControlProvider.can() pre každý resource pri každom renderi
+// menu stromu; keď resources pole dostáva nové referencie objektov pri každom renderi
+// RefineProvider (napr. kvôli usePathname()), spôsobovalo to nekonečný cyklus
+// getSession() -> SessionProvider re-render -> nové resources -> CanAccess znova ->
+// getSession() -> ... (Maximum call stack size exceeded v <CanAccess>).
+const RESOURCES = [
+  {
+    name: "traffic-sync",
+    list: "/",
+    meta: {
+      label: "Traffic Source Sync",
+      icon: <UploadOutlined />,
+    },
+  },
+  {
+    name: "ac-cleaner",
+    list: "/ac-cleaner",
+    meta: {
+      label: "ActiveCampaign Cleaner",
+      icon: <ClearOutlined />,
+    },
+  },
+  {
+    name: "mention-tracker",
+    list: "/mention-tracker",
+    meta: {
+      label: "Mention Tracker",
+      icon: <MentionTrackerIcon />,
+    },
+  },
+];
+
 export function RefineProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-
-  // We can add dummy dataProvider since we are just building tools
-  const dataProvider = {
-    getList: async () => ({ data: [], total: 0 }),
-    getOne: async () => ({ data: {} as any }),
-    update: async () => ({ data: {} as any }),
-    create: async () => ({ data: {} as any }),
-    deleteOne: async () => ({ data: {} as any }),
-    getApiUrl: () => "",
-    getCustom: async () => ({ data: {} as any }),
-  };
 
   return (
     <SessionProvider>
@@ -62,24 +96,7 @@ export function RefineProvider({ children }: { children: React.ReactNode }) {
             authProvider={authProvider}
             dataProvider={dataProvider}
             accessControlProvider={accessControlProvider}
-            resources={[
-              {
-                name: "traffic-sync",
-                list: "/",
-                meta: {
-                  label: "Traffic Source Sync",
-                  icon: <UploadOutlined />,
-                },
-              },
-              {
-                name: "ac-cleaner",
-                list: "/ac-cleaner",
-                meta: {
-                  label: "ActiveCampaign Cleaner",
-                  icon: <ClearOutlined />,
-                },
-              },
-            ]}
+            resources={RESOURCES}
             options={{
               syncWithLocation: true,
               warnWhenUnsavedChanges: true,
