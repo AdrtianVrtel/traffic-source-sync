@@ -33,7 +33,7 @@ NEXTAUTH_SECRET=sem_vlozte_vas_tajny_kluc
 
 # PostHog API
 POSTHOG_PROJECT_ID=vas_project_id
-POSTHOG_PERSONAL_API_KEY=vas_personal_api_key
+POSTHOG_API_KEY=vas_personal_api_key
 # Voliteľné: ak používate európsky PostHog, nechajte tak. Ak americký, zmeňte na https://app.posthog.com
 POSTHOG_HOST=https://eu.posthog.com
 
@@ -70,9 +70,13 @@ CRON_SECRET=sem_vlozte_nahodny_string
 ActiveCampaign Cleaner si ukladá históriu behov do SQLite databázy v `/app/data`. Bez volume sa databáza zmaže pri každom redeployi.
 
 1. V Coolify otvorte aplikáciu -> **Persistent Storage** -> **Add**.
-2. Zvoľte typ **Volume Mount** a ako **Destination Path** zadajte `/app/data`.
-   (Mountujte celý adresár, nie single file - SQLite si vedľa databázy vytvára pomocné súbory `-wal` a `-shm`.)
+2. Zvoľte typ **Volume Mount**, **Destination Path** = `/app/data`, Source Path nechajte prázdne.
+   Alternatívne **Directory Mount** (bind) - vtedy vyplňte aj Source Path na hostiteľovi, napr. `/data/traffic-sync`. Výhoda je jednoduchšie zálohovanie databázy priamo z filesystému servera.
 3. Uložte a redeploynite.
+
+**Nikdy nepoužívajte File Mount na `app.db`.** SQLite beží vo WAL režime a vytvára si vedľa databázy súbory `app.db-wal` a `app.db-shm`. Pri mountnutí jedného súboru by tie skončili v efemérnej vrstve kontejnera - strata dát pri reštarte, prípadne poškodená databáza. Mountuje sa vždy celý adresár.
+
+Appka v kontejneri beží ako root, takže na ownership volume netreba myslieť.
 
 ## 3c. Scheduled Task pre Mention Tracker
 Pravidelný fetch zmienok spúšťa natívna Coolify funkcia **Scheduled Tasks** (appka nemá vlastný cron).
