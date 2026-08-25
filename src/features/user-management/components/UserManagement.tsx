@@ -50,7 +50,7 @@ export const UserManagement = () => {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/users")
+    fetch("/api/admin/users")
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) throw new Error(data?.error || "Nepodarilo sa načítať používateľov.");
@@ -72,7 +72,7 @@ export const UserManagement = () => {
   const handleCreate = async (values: { email: string; role: "admin" | "user"; allowedTools?: string[] }) => {
     setCreating(true);
     try {
-      const response = await fetch("/api/users", {
+      const response = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -97,7 +97,7 @@ export const UserManagement = () => {
 
   const patchUser = async (id: number, body: Record<string, unknown>, successMsg: string) => {
     try {
-      const response = await fetch(`/api/users/${id}`, {
+      const response = await fetch(`/api/admin/users/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -115,7 +115,7 @@ export const UserManagement = () => {
 
   const handleDelete = async (user: ManagedUser) => {
     try {
-      const response = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Zmazanie zlyhalo.");
       setUserList((prev) => prev.filter((u) => u.id !== user.id));

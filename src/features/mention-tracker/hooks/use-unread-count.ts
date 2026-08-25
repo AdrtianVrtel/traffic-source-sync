@@ -8,7 +8,7 @@ export function useUnreadMentionsCount(): number {
   useEffect(() => {
     let cancelled = false;
     const refresh = () => {
-      fetch("/api/mentions/unread-count")
+      fetch("/api/mention-tracker/mentions/unread-count")
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (!cancelled && data) setCount(data.count);

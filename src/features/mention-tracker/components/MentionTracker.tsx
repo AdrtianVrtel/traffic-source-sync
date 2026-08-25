@@ -32,14 +32,14 @@ export const MentionTrackerTool = () => {
     if (filterRead === "unread") params.set("read", "false");
     if (filterRead === "read") params.set("read", "true");
 
-    const response = await fetch(`/api/mentions?${params.toString()}`);
+    const response = await fetch(`/api/mention-tracker/mentions?${params.toString()}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data?.error || "Nepodarilo sa načítať zmienky.");
     return data;
   }, [page, pageSize, filterTermId, filterRead]);
 
   const fetchTermsData = useCallback(async (): Promise<{ terms: TrackedTerm[] }> => {
-    const response = await fetch("/api/tracked-terms");
+    const response = await fetch("/api/mention-tracker/terms");
     const data = await response.json();
     if (!response.ok) throw new Error(data?.error || "Nepodarilo sa načítať kľúčové slová.");
     return data;
@@ -79,7 +79,7 @@ export const MentionTrackerTool = () => {
   const handleFetchNow = async () => {
     setFetching(true);
     try {
-      const response = await fetch("/api/mentions/fetch-now", { method: "POST" });
+      const response = await fetch("/api/mention-tracker/fetch", { method: "POST" });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Fetch zlyhal.");
       message.success(
@@ -96,7 +96,7 @@ export const MentionTrackerTool = () => {
 
   const handleMarkRead = async (mention: Mention, isRead: boolean) => {
     try {
-      const response = await fetch(`/api/mentions/${mention.id}/read`, {
+      const response = await fetch(`/api/mention-tracker/mentions/${mention.id}/read`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isRead }),
@@ -112,7 +112,7 @@ export const MentionTrackerTool = () => {
 
   const handleMarkAllRead = async () => {
     try {
-      const response = await fetch("/api/mentions/mark-all-read", { method: "POST" });
+      const response = await fetch("/api/mention-tracker/mentions/mark-all-read", { method: "POST" });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Hromadné označenie zlyhalo.");
       message.success(`Označených ${data.markedCount} zmienok ako prečítané.`);
@@ -125,7 +125,7 @@ export const MentionTrackerTool = () => {
 
   const handleAddTerm = async (term: string) => {
     try {
-      const response = await fetch("/api/tracked-terms", {
+      const response = await fetch("/api/mention-tracker/terms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ term }),
@@ -143,7 +143,7 @@ export const MentionTrackerTool = () => {
 
   const handleToggleTerm = async (term: TrackedTerm, active: boolean) => {
     try {
-      const response = await fetch(`/api/tracked-terms/${term.id}`, {
+      const response = await fetch(`/api/mention-tracker/terms/${term.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active }),
@@ -158,7 +158,7 @@ export const MentionTrackerTool = () => {
 
   const handleDeleteTerm = async (term: TrackedTerm) => {
     try {
-      const response = await fetch(`/api/tracked-terms/${term.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/mention-tracker/terms/${term.id}`, { method: "DELETE" });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Zmazanie zlyhalo.");
       setTerms((prev) => prev.filter((t) => t.id !== term.id));

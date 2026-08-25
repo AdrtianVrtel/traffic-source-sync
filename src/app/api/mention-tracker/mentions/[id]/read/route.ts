@@ -4,7 +4,7 @@ import { requireTool } from "@/shared/auth/permissions";
 import { db } from "@/shared/db";
 import { mentions } from "@/shared/db/schema";
 
-export async function PATCH(req: Request, ctx: RouteContext<"/api/mentions/[id]/read">) {
+export async function PATCH(req: Request, ctx: RouteContext<"/api/mention-tracker/mentions/[id]/read">) {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;
 

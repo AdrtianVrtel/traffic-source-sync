@@ -16,7 +16,7 @@ export const ProfileSettings = () => {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/profile")
+    fetch("/api/me/profile")
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) throw new Error(data?.error || "Nepodarilo sa načítať profil.");
@@ -39,7 +39,7 @@ export const ProfileSettings = () => {
   const handleSave = async (values: { nickname: string }) => {
     setSaving(true);
     try {
-      const response = await fetch("/api/profile", {
+      const response = await fetch("/api/me/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nickname: values.nickname ?? "" }),

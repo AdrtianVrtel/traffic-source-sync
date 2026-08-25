@@ -170,7 +170,7 @@ export const TrafficSyncTool = () => {
       for (let i = 0; i < totalBatches; i++) {
         const batchEmails = emails.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
 
-        const response = await fetch("/api/posthog-sync", {
+        const response = await fetch("/api/traffic-sync/posthog", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ emails: batchEmails }),

@@ -9,7 +9,7 @@ const updateSchema = z.object({
   active: z.boolean(),
 });
 
-export async function PATCH(req: Request, ctx: RouteContext<"/api/tracked-terms/[id]">) {
+export async function PATCH(req: Request, ctx: RouteContext<"/api/mention-tracker/terms/[id]">) {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;
 
@@ -32,7 +32,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/tracked-terms/
   return NextResponse.json({ term: updated });
 }
 
-export async function DELETE(_req: Request, ctx: RouteContext<"/api/tracked-terms/[id]">) {
+export async function DELETE(_req: Request, ctx: RouteContext<"/api/mention-tracker/terms/[id]">) {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;
 

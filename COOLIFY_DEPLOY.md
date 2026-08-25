@@ -77,7 +77,7 @@ Pravidelný fetch zmienok spúšťa natívna Coolify funkcia **Scheduled Tasks**
 2. **Cron expression:** `0 */6 * * *` (každých 6 hodín; frekvencia sa dá kedykoľvek zmeniť bez redeployu).
 3. **Command** (image je node:20-alpine bez curl, preto node one-liner - Node 18+ má fetch vstavaný):
 ```
-node -e "fetch('http://localhost:3000/api/cron/fetch-mentions',{method:'POST',headers:{Authorization:'Bearer '+process.env.CRON_SECRET}}).then(r=>r.text()).then(console.log).catch(e=>{console.error(e);process.exit(1)})"
+node -e "fetch('http://localhost:3000/api/mention-tracker/cron',{method:'POST',headers:{Authorization:'Bearer '+process.env.CRON_SECRET}}).then(r=>r.text()).then(console.log).catch(e=>{console.error(e);process.exit(1)})"
 ```
 4. Prvý beh overte priamo v logoch scheduled tasku v Coolify - v odpovedi má byť JSON s počtami (`resultsCount`, `newMentionsCount`). Endpoint má guard proti súbežnému behu, takže prekrývajúce sa spustenia sa bezpečne preskočia (`skipped: true`).
 

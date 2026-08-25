@@ -53,7 +53,7 @@ export const AcCleanerTool = () => {
   const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
-    fetch("/api/ac-sync")
+    fetch("/api/ac-cleaner/scan")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => data && setStatus(data))
       .catch(() => setStatus(null));
@@ -62,7 +62,7 @@ export const AcCleanerTool = () => {
   const handleSearch = async () => {
     setSearching(true);
     try {
-      const response = await fetch("/api/ac-sync", {
+      const response = await fetch("/api/ac-cleaner/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullScan }),
@@ -113,7 +113,7 @@ export const AcCleanerTool = () => {
     if (hardMatches.length === 0) return;
     setArchiving(true);
     try {
-      const response = await fetch("/api/ac-archive", {
+      const response = await fetch("/api/ac-cleaner/archive", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

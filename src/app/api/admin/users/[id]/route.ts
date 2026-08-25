@@ -15,7 +15,7 @@ const updateSchema = z.object({
   regenerateInvite: z.boolean().optional(),
 });
 
-export async function PATCH(req: Request, ctx: RouteContext<"/api/users/[id]">) {
+export async function PATCH(req: Request, ctx: RouteContext<"/api/admin/users/[id]">) {
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 
@@ -61,7 +61,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/users/[id]">) 
   });
 }
 
-export async function DELETE(_req: Request, ctx: RouteContext<"/api/users/[id]">) {
+export async function DELETE(_req: Request, ctx: RouteContext<"/api/admin/users/[id]">) {
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 
