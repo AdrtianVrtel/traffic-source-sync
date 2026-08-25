@@ -7,6 +7,8 @@ import { migrate } from "./migrate";
 import { seed } from "./seed";
 import * as schema from "./schema";
 
+type Db = ReturnType<typeof createDb>;
+
 function createDb() {
   const dbPath = path.resolve(env.DATABASE_PATH);
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -17,6 +19,14 @@ function createDb() {
   return drizzle(sqlite, { schema });
 }
 
-const globalForDb = globalThis as unknown as { __drizzleDb?: ReturnType<typeof createDb> };
+const globalForDb = globalThis as unknown as { __drizzleDb?: Db };
 
-export const db = globalForDb.__drizzleDb ?? (globalForDb.__drizzleDb = createDb());
+const getDb = (): Db => (globalForDb.__drizzleDb ??= createDb());
+
+export const db = new Proxy({} as Db, {
+  get: (_target, prop) => {
+    const real = getDb() as unknown as Record<string | symbol, unknown>;
+    const value = real[prop];
+    return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(real) : value;
+  },
+});
