@@ -5,6 +5,7 @@ import { env } from "@/shared/env";
 import { db } from "@/shared/db";
 import { archivedContacts } from "@/shared/db/schema";
 import { archiveContact, isAcConfigured } from "@/features/ac-cleaner/server/ac-client";
+import { sleep } from "@/shared/utils/sleep";
 
 const payloadSchema = z.object({
   contacts: z
@@ -19,7 +20,6 @@ const payloadSchema = z.object({
     .min(1, "Zoznam kontaktov je prázdny"),
 });
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function POST(req: Request) {
   const user = await requireTool("ac-cleaner");

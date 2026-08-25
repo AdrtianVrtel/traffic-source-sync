@@ -1,5 +1,6 @@
 import { env } from "@/shared/env";
 import type { AcContact } from "./rules";
+import { sleep } from "@/shared/utils/sleep";
 
 const ARCHIVE_TAG = "test_archived";
 const PAGE_SIZE = 100;
@@ -7,7 +8,6 @@ const MAX_CONTACTS = 20000;
 
 export const isAcConfigured = () => Boolean(env.AC_API_URL && env.AC_API_KEY);
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function acFetch(pathname: string, init: RequestInit = {}, retries = 3): Promise<Response> {
   if (!isAcConfigured()) {

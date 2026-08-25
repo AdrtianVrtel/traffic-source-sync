@@ -1,133 +1,14 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  Form,
-  Input,
-  message,
-  Popconfirm,
-  Radio,
-  Select,
-  Space,
-  Switch,
-  Table,
-  Tabs,
-  Tag,
-  theme,
-  Tooltip,
-  Typography,
-} from "antd";
-import {
-  CheckOutlined,
-  DeleteOutlined,
-  GlobalOutlined,
-  PlusOutlined,
-  SyncOutlined,
-  UndoOutlined,
-} from "@ant-design/icons";
-import { findTermMatches } from "@/features/mention-tracker/snippet";
+import { Alert, Badge, Button, Card, message, Space, Tabs, Typography } from "antd";
+import { CheckOutlined, SyncOutlined } from "@ant-design/icons";
+import { formatDate } from "@/shared/utils/format-date";
+import { MentionsTable } from "./MentionsTable";
+import { TermsTable } from "./TermsTable";
+import type { LastRun, Mention, MentionsPage, ReadFilter, TrackedTerm } from "../types";
 
-const { Title, Text, Paragraph, Link: AntLink } = Typography;
-
-const buildHighlightedParts = (text: string, term: string, color: string): React.ReactNode[] => {
-  const matches = findTermMatches(text, term);
-  if (!text || matches.length === 0) return [text];
-
-  const parts: React.ReactNode[] = [];
-  let cursor = 0;
-
-  matches.forEach((match, index) => {
-    if (match.start > cursor) parts.push(text.slice(cursor, match.start));
-    parts.push(
-      <Text key={`${match.start}-${index}`} strong style={{ color }}>
-        {text.slice(match.start, match.end)}
-      </Text>
-    );
-    cursor = match.end;
-  });
-  if (cursor < text.length) parts.push(text.slice(cursor));
-
-  return parts;
-};
-
-const MentionSnippet = ({ text, term }: { text: string; term: string | null }) => {
-  const { token } = theme.useToken();
-  const parts = term ? buildHighlightedParts(text, term, token.colorPrimary) : [text];
-
-  return (
-    <Paragraph
-      type="secondary"
-      style={{ marginBottom: 0 }}
-      ellipsis={{
-        rows: 3,
-        expandable: "collapsible",
-        symbol: (isExpanded: boolean) => (isExpanded ? "Zobraziť menej" : "Zobraziť viac"),
-      }}
-    >
-      {parts}
-    </Paragraph>
-  );
-};
-
-const SourceFavicon = ({ url }: { url: string | null }) => {
-  const [failed, setFailed] = useState(false);
-
-  if (!url || failed) return <GlobalOutlined />;
-
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={url}
-      alt=""
-      width={16}
-      height={16}
-      style={{ borderRadius: 2, verticalAlign: "middle" }}
-      onError={() => setFailed(true)}
-    />
-  );
-};
-
-interface Mention {
-  id: number;
-  termId: number;
-  term: string | null;
-  url: string;
-  title: string;
-  snippet: string;
-  sourceDomain: string;
-  faviconUrl: string | null;
-  publishedDate: string | null;
-  isRead: boolean;
-  firstSeenAt: string;
-}
-
-interface TrackedTerm {
-  id: number;
-  term: string;
-  query: string;
-  active: boolean;
-  createdAt: string;
-  mentionsCount: number;
-}
-
-interface LastRun {
-  runAt: string;
-  status: "running" | "success" | "error";
-  trigger: "cron" | "manual";
-  resultsCount: number;
-  newMentionsCount: number;
-  errorMessage: string | null;
-}
-
-const CREDIT_BUDGET_WARNING = 900;
-const RUNS_PER_DAY = 4;
-
-const formatDate = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleString("sk-SK") : "—";
+const { Title, Text } = Typography;
 
 const emitMentionsUpdated = () => window.dispatchEvent(new Event("mentions-updated"));
 
@@ -143,10 +24,9 @@ export const MentionTrackerTool = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [filterTermId, setFilterTermId] = useState<number | null>(null);
-  const [filterRead, setFilterRead] = useState<"all" | "unread" | "read">("all");
-  const [termForm] = Form.useForm();
+  const [filterRead, setFilterRead] = useState<ReadFilter>("all");
 
-  const fetchMentionsData = useCallback(async () => {
+  const fetchMentionsData = useCallback(async (): Promise<MentionsPage> => {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (filterTermId) params.set("termId", String(filterTermId));
     if (filterRead === "unread") params.set("read", "false");
@@ -158,20 +38,14 @@ export const MentionTrackerTool = () => {
     return data;
   }, [page, pageSize, filterTermId, filterRead]);
 
-  const fetchTermsData = useCallback(async () => {
+  const fetchTermsData = useCallback(async (): Promise<{ terms: TrackedTerm[] }> => {
     const response = await fetch("/api/tracked-terms");
     const data = await response.json();
     if (!response.ok) throw new Error(data?.error || "Nepodarilo sa načítať kľúčové slová.");
     return data;
   }, []);
 
-  const applyMentionsData = (data: {
-    mentions: Mention[];
-    total: number;
-    unreadCount: number;
-    configured: boolean;
-    lastRun: LastRun | null;
-  }) => {
+  const applyMentionsData = (data: MentionsPage) => {
     setMentionList(data.mentions);
     setTotal(data.total);
     setUnreadCount(data.unreadCount);
@@ -249,20 +123,21 @@ export const MentionTrackerTool = () => {
     }
   };
 
-  const handleAddTerm = async (values: { term: string }) => {
+  const handleAddTerm = async (term: string) => {
     try {
       const response = await fetch("/api/tracked-terms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ term: values.term }),
+        body: JSON.stringify({ term }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Pridanie zlyhalo.");
       setTerms((prev) => [...prev, data.term]);
-      termForm.resetFields();
       message.success(`Kľúčové slovo "${data.term.term}" pridané. Zachytí sa pri ďalšom fetchi.`);
+      return true;
     } catch (error) {
       message.error(error instanceof Error ? error.message : "Pridanie zlyhalo.");
+      return false;
     }
   };
 
@@ -296,124 +171,6 @@ export const MentionTrackerTool = () => {
   };
 
   const activeTermsCount = terms.filter((t) => t.active).length;
-  const monthlyCreditEstimate = activeTermsCount * RUNS_PER_DAY * 30;
-
-  const mentionColumns = [
-    {
-      title: "Titulok",
-      key: "title",
-      width: 320,
-      render: (_: unknown, record: Mention) => (
-        <Space size={6} wrap>
-          <AntLink href={record.url} target="_blank" rel="noopener noreferrer" strong={!record.isRead}>
-            {record.title || record.url}
-          </AntLink>
-          {!record.isRead && <Tag color="blue">Nové</Tag>}
-        </Space>
-      ),
-    },
-    {
-      title: "Doména",
-      key: "sourceDomain",
-      width: 180,
-      render: (_: unknown, record: Mention) =>
-        record.sourceDomain && (
-          <Tag icon={<SourceFavicon url={record.faviconUrl} />}>{record.sourceDomain}</Tag>
-        ),
-    },
-    {
-      title: "Úryvok",
-      dataIndex: "snippet",
-      key: "snippet",
-      width: 420,
-      render: (snippet: string, record: Mention) => <MentionSnippet text={snippet} term={record.term} />,
-    },
-    {
-      title: "Kľúčové slovo",
-      dataIndex: "term",
-      key: "term",
-      width: 170,
-      render: (term: string | null) => (term ? <Tag color="blue">{term}</Tag> : "—"),
-    },
-    {
-      title: "Publikované",
-      key: "publishedDate",
-      width: 160,
-      render: (_: unknown, record: Mention) => (
-        <Tooltip title={`Prvýkrát videné: ${formatDate(record.firstSeenAt)}`}>
-          {record.publishedDate ? formatDate(record.publishedDate) : formatDate(record.firstSeenAt)}
-        </Tooltip>
-      ),
-    },
-    {
-      title: "Akcia",
-      key: "actions",
-      width: 190,
-      render: (_: unknown, record: Mention) =>
-        record.isRead ? (
-          <Button
-            size="small"
-            type="text"
-            icon={<UndoOutlined />}
-            onClick={() => handleMarkRead(record, false)}
-          >
-            Označiť neprečítané
-          </Button>
-        ) : (
-          <Button size="small" icon={<CheckOutlined />} onClick={() => handleMarkRead(record, true)}>
-            Označiť prečítané
-          </Button>
-        ),
-    },
-  ];
-
-  const termColumns = [
-    { title: "Kľúčové slovo", dataIndex: "term", key: "term" },
-    {
-      title: "Tavily query",
-      dataIndex: "query",
-      key: "query",
-      render: (q: string) => <Text code>{q}</Text>,
-    },
-    {
-      title: "Zmienok",
-      dataIndex: "mentionsCount",
-      key: "mentionsCount",
-      width: 100,
-    },
-    {
-      title: "Aktívne",
-      dataIndex: "active",
-      key: "active",
-      width: 100,
-      render: (active: boolean, record: TrackedTerm) => (
-        <Switch size="small" checked={active} onChange={(checked) => handleToggleTerm(record, checked)} />
-      ),
-    },
-    {
-      title: "Pridané",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 170,
-      render: (d: string) => formatDate(d),
-    },
-    {
-      title: "",
-      key: "actions",
-      width: 60,
-      render: (_: unknown, record: TrackedTerm) => (
-        <Popconfirm
-          title={`Zmazať "${record.term}"?`}
-          description={`Zmaže sa aj ${record.mentionsCount} zmienok nájdených týmto slovom. Na dočasné vypnutie použite prepínač Aktívne.`}
-          onConfirm={() => handleDeleteTerm(record)}
-          okText="Áno, zmazať"
-          cancelText="Nie"
-        >
-          <Button size="small" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
-      ),
-    },
-  ];
 
   return (
     <Card variant="borderless">
@@ -468,91 +225,42 @@ export const MentionTrackerTool = () => {
                 </Space>
               ),
               children: (
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Space wrap>
-                    <Select
-                      allowClear
-                      placeholder="Všetky kľúčové slová"
-                      style={{ minWidth: 220 }}
-                      value={filterTermId ?? undefined}
-                      options={terms.map((t) => ({ label: t.term, value: t.id }))}
-                      onChange={(value) => {
-                        setFilterTermId(value ?? null);
-                        setPage(1);
-                      }}
-                    />
-                    <Radio.Group
-                      value={filterRead}
-                      onChange={(e) => {
-                        setFilterRead(e.target.value);
-                        setPage(1);
-                      }}
-                      options={[
-                        { label: "Všetky", value: "all" },
-                        { label: "Neprečítané", value: "unread" },
-                        { label: "Prečítané", value: "read" },
-                      ]}
-                      optionType="button"
-                      buttonStyle="solid"
-                    />
-                  </Space>
-                  <Table
-                    dataSource={mentionList}
-                    columns={mentionColumns}
-                    rowKey="id"
-                    loading={loading}
-                    scroll={{ x: "max-content" }}
-                    pagination={{
-                      current: page,
-                      pageSize,
-                      total,
-                      showSizeChanger: true,
-                      onChange: (p, ps) => {
-                        setPage(p);
-                        setPageSize(ps);
-                      },
-                    }}
-                  />
-                </Space>
+                <MentionsTable
+                  mentions={mentionList}
+                  terms={terms}
+                  loading={loading}
+                  total={total}
+                  page={page}
+                  pageSize={pageSize}
+                  filterTermId={filterTermId}
+                  filterRead={filterRead}
+                  onFilterTermChange={(termId) => {
+                    setFilterTermId(termId);
+                    setPage(1);
+                  }}
+                  onFilterReadChange={(filter) => {
+                    setFilterRead(filter);
+                    setPage(1);
+                  }}
+                  onPageChange={(nextPage, nextPageSize) => {
+                    setPage(nextPage);
+                    setPageSize(nextPageSize);
+                  }}
+                  onMarkRead={handleMarkRead}
+                />
               ),
             },
             {
               key: "terms",
               label: `Kľúčové slová (${activeTermsCount} aktívnych)`,
               children: (
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  {monthlyCreditEstimate > CREDIT_BUDGET_WARNING && (
-                    <Alert
-                      type="warning"
-                      showIcon
-                      message={`Odhad ~${monthlyCreditEstimate} Tavily creditov/mesiac pri ${activeTermsCount} aktívnych slovách a fetchi ${RUNS_PER_DAY}×/deň - free tier má 1000/mesiac.`}
-                    />
-                  )}
-                  <Form form={termForm} layout="inline" onFinish={handleAddTerm}>
-                    <Form.Item
-                      name="term"
-                      rules={[
-                        { required: true, message: "Zadajte kľúčové slovo" },
-                        { min: 2, message: "Aspoň 2 znaky" },
-                      ]}
-                    >
-                      <Input placeholder='Napr. "IIS crowdfunding"' style={{ width: 280 }} />
-                    </Form.Item>
-                    <Form.Item>
-                      <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
-                        Pridať kľúčové slovo
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                  <Table
-                    dataSource={terms}
-                    columns={termColumns}
-                    rowKey="id"
-                    loading={loading}
-                    pagination={false}
-                    scroll={{ x: "max-content" }}
-                  />
-                </Space>
+                <TermsTable
+                  terms={terms}
+                  loading={loading}
+                  onAdd={handleAddTerm}
+                  onToggle={handleToggleTerm}
+                  onDelete={handleDeleteTerm}
+                />
               ),
             },
           ]}

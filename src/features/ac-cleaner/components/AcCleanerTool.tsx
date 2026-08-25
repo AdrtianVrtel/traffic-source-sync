@@ -24,6 +24,7 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import type { ClassifiedContact } from "@/features/ac-cleaner/server/rules";
+import { formatDate } from "@/shared/utils/format-date";
 
 const { Title, Text } = Typography;
 
@@ -40,8 +41,6 @@ interface SyncStatus {
   lastSync: LastSyncInfo | null;
 }
 
-const formatDate = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleString("sk-SK") : "—";
 
 export const AcCleanerTool = () => {
   const [status, setStatus] = useState<SyncStatus | null>(null);
