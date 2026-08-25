@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
-import { env } from "@/env";
-import { isTavilyConfigured } from "@/lib/mention-tracker/tavily";
-import { runFetchMentions } from "@/lib/mention-tracker/service";
+import { env } from "@/shared/env";
+import { isTavilyConfigured } from "@/features/mention-tracker/server/tavily";
+import { runFetchMentions } from "@/features/mention-tracker/server/service";
 
 const isAuthorized = (req: Request): boolean => {
   if (!env.CRON_SECRET) return false;

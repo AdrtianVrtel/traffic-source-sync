@@ -5,7 +5,7 @@ import { Authenticated } from "@refinedev/core";
 import { Button, Card, Form, Input, message, Spin, Typography } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useSession } from "next-auth/react";
-import { Layout } from "@/components/layout";
+import { Layout } from "@/shared/ui/AppLayout";
 
 const { Title, Text } = Typography;
 

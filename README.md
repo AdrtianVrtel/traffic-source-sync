@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IIS Tooling
 
-## Getting Started
+Interné nástroje pre Invest in Slovakia. Next.js appka s prihlásením, správou používateľov a troma nástrojmi.
 
-First, run the development server:
+## Nástroje
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| Nástroj | Route | Čo robí |
+|---|---|---|
+| Traffic Source Sync | `/traffic-sync` | K e-mailom z nahraného Excelu doplní zdroj návštevnosti z PostHogu a vráti obohatený súbor + grafy |
+| ActiveCampaign Cleaner | `/ac-cleaner` | Nájde testovacie kontakty v ActiveCampaign, rozdelí ich na "na archiváciu" a "na kontrolu", po potvrdení archivuje |
+| Mention Tracker | `/mention-tracker` | Sleduje verejné zmienky o IIS na webe cez Tavily API, dedupuje ich a ukazuje neprečítané |
+
+Prístup k jednotlivým nástrojom sa nastavuje per používateľ v `/admin/users` (len admin).
+
+## Štruktúra
+
+```
+src/
+  app/            routing (Next.js App Router) - stránky a API endpointy
+  features/       kód jednotlivých nástrojov (components / server / hooks)
+  shared/         zdieľané veci - auth, db, UI shell, utils, env
+  providers/      Refine a NextAuth providery
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Keď hľadáš kód k nástroju, choď do `src/features/<nazov-nastroja>/`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Lokálny vývoj
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm install
+pnpm dev
+```
 
-## Learn More
+Potrebné env premenné sú v `.env.local` (vzor a popis všetkých premenných je v [COOLIFY_DEPLOY.md](COOLIFY_DEPLOY.md)). Databáza je SQLite, vytvorí sa automaticky v `./data/app.db`.
 
-To learn more about Next.js, take a look at the following resources:
+## Nasadenie
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Docker + Coolify. Postup, env premenné, persistent volume pre databázu a nastavenie cron tasku pre Mention Tracker sú v [COOLIFY_DEPLOY.md](COOLIFY_DEPLOY.md).

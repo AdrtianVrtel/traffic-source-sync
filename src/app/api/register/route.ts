@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { hashPassword } from "@/lib/auth/password";
+import { db } from "@/shared/db";
+import { users } from "@/shared/db/schema";
+import { hashPassword } from "@/shared/auth/password";
 
 const findPendingByToken = async (token: string) => {
   const [user] = await db

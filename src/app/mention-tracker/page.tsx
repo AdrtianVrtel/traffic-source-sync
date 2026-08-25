@@ -2,8 +2,8 @@
 
 import { Authenticated, CanAccess } from "@refinedev/core";
 import { Alert } from "antd";
-import { Layout } from "@/components/layout";
-import { MentionTrackerTool } from "@/components/mention-tracker";
+import { Layout } from "@/shared/ui/AppLayout";
+import { MentionTrackerTool } from "@/features/mention-tracker/components/MentionTracker";
 
 export default function MentionTrackerPage() {
   return (

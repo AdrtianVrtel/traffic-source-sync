@@ -1,5 +1,5 @@
 import type { DefaultSession } from "next-auth";
-import type { ToolKey } from "@/lib/tools";
+import type { ToolKey } from "@/shared/tools";
 
 declare module "next-auth" {
   interface Session {

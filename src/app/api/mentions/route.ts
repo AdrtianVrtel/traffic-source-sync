@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { and, desc, eq, sql } from "drizzle-orm";
-import { requireTool } from "@/lib/auth/permissions";
-import { db } from "@/db";
-import { mentions, trackedTerms, fetchRuns } from "@/db/schema";
-import { isTavilyConfigured } from "@/lib/mention-tracker/tavily";
+import { requireTool } from "@/shared/auth/permissions";
+import { db } from "@/shared/db";
+import { mentions, trackedTerms, fetchRuns } from "@/shared/db/schema";
+import { isTavilyConfigured } from "@/features/mention-tracker/server/tavily";
 
 export async function GET(req: Request) {
   const user = await requireTool("mention-tracker");

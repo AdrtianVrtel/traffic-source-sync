@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireTool } from "@/lib/auth/permissions";
-import { env } from "@/env";
+import { requireTool } from "@/shared/auth/permissions";
+import { env } from "@/shared/env";
 
 const fetchWithBackoff = async (url: string, options: RequestInit, retries = 3, backoff = 1000): Promise<Response> => {
   for (let i = 0; i < retries; i++) {

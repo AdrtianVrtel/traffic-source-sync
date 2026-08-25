@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireTool } from "@/lib/auth/permissions";
-import { env } from "@/env";
-import { db } from "@/db";
-import { archivedContacts } from "@/db/schema";
-import { archiveContact, isAcConfigured } from "@/lib/ac-cleaner/ac-client";
+import { requireTool } from "@/shared/auth/permissions";
+import { env } from "@/shared/env";
+import { db } from "@/shared/db";
+import { archivedContacts } from "@/shared/db/schema";
+import { archiveContact, isAcConfigured } from "@/features/ac-cleaner/server/ac-client";
 
 const payloadSchema = z.object({
   contacts: z

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { requireTool } from "@/lib/auth/permissions";
-import { isTavilyConfigured } from "@/lib/mention-tracker/tavily";
-import { getLastRunAt, runFetchMentions, RUN_COOLDOWN_MINUTES } from "@/lib/mention-tracker/service";
+import { requireTool } from "@/shared/auth/permissions";
+import { isTavilyConfigured } from "@/features/mention-tracker/server/tavily";
+import { getLastRunAt, runFetchMentions, RUN_COOLDOWN_MINUTES } from "@/features/mention-tracker/server/service";
 
 export async function POST() {
   const user = await requireTool("mention-tracker");

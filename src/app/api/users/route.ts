@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { requireAdmin } from "@/lib/auth/permissions";
-import { ALL_TOOL_KEYS } from "@/lib/tools";
+import { db } from "@/shared/db";
+import { users } from "@/shared/db/schema";
+import { requireAdmin } from "@/shared/auth/permissions";
+import { ALL_TOOL_KEYS } from "@/shared/tools";
 
 const toolKeySchema = z.enum(ALL_TOOL_KEYS as [string, ...string[]]);
 

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { desc, eq } from "drizzle-orm";
-import { requireTool } from "@/lib/auth/permissions";
-import { db } from "@/db";
-import { syncHistory } from "@/db/schema";
-import { fetchContactsSince, isAcConfigured } from "@/lib/ac-cleaner/ac-client";
-import { classifyContacts } from "@/lib/ac-cleaner/rules";
+import { requireTool } from "@/shared/auth/permissions";
+import { db } from "@/shared/db";
+import { syncHistory } from "@/shared/db/schema";
+import { fetchContactsSince, isAcConfigured } from "@/features/ac-cleaner/server/ac-client";
+import { classifyContacts } from "@/features/ac-cleaner/server/rules";
 
 export async function GET() {
   const user = await requireTool("ac-cleaner");

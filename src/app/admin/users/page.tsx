@@ -3,25 +3,25 @@
 import { Authenticated, CanAccess } from "@refinedev/core";
 import { Alert } from "antd";
 import { Layout } from "@/shared/ui/AppLayout";
-import { AcCleanerTool } from "@/features/ac-cleaner/components/AcCleanerTool";
+import { UserManagement } from "@/features/user-management/components/UserManagement";
 
-export default function AcCleanerPage() {
+export default function SettingsPage() {
   return (
-    <Authenticated key="ac-cleaner-page" fallback={<div style={{ padding: 24 }}>Načítavam...</div>}>
+    <Authenticated key="settings-page" fallback={<div style={{ padding: 24 }}>Načítavam...</div>}>
       <Layout>
         <CanAccess
-          resource="ac-cleaner"
+          resource="users"
           action="list"
           fallback={
             <Alert
               type="warning"
               showIcon
               message="Nedostatočné oprávnenia"
-              description="K nástroju ActiveCampaign Cleaner nemáte prístup. Kontaktujte administrátora."
+              description="Správa používateľov je dostupná len administrátorom."
             />
           }
         >
-          <AcCleanerTool />
+          <UserManagement />
         </CanAccess>
       </Layout>
     </Authenticated>

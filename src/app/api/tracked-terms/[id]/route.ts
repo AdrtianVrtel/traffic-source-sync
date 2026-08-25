@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { requireTool } from "@/lib/auth/permissions";
-import { db } from "@/db";
-import { trackedTerms, mentions } from "@/db/schema";
+import { requireTool } from "@/shared/auth/permissions";
+import { db } from "@/shared/db";
+import { trackedTerms, mentions } from "@/shared/db/schema";
 
 const updateSchema = z.object({
   active: z.boolean(),

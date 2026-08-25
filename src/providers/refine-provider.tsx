@@ -7,8 +7,8 @@ import { SessionProvider, getSession } from "next-auth/react";
 import { ConfigProvider, App as AntdApp } from "antd";
 import { authProvider } from "./auth-provider";
 import { UploadOutlined, ClearOutlined } from "@ant-design/icons";
-import { ALL_TOOL_KEYS } from "@/lib/tools";
-import { MentionTrackerIcon } from "@/components/mention-tracker/sidebar-icon";
+import { ALL_TOOL_KEYS } from "@/shared/tools";
+import { MentionTrackerIcon } from "@/features/mention-tracker/components/SidebarIcon";
 import "@refinedev/antd/dist/reset.css";
 
 if (typeof window !== "undefined") {
@@ -48,7 +48,7 @@ const dataProvider = {
 const RESOURCES = [
   {
     name: "traffic-sync",
-    list: "/",
+    list: "/traffic-sync",
     meta: {
       label: "Traffic Source Sync",
       icon: <UploadOutlined />,

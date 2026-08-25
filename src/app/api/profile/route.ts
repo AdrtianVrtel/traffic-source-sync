@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { getSessionUser } from "@/lib/auth/permissions";
+import { db } from "@/shared/db";
+import { users } from "@/shared/db/schema";
+import { getSessionUser } from "@/shared/auth/permissions";
 
 export async function GET() {
   const user = await getSessionUser();

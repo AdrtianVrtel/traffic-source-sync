@@ -1,10 +1,10 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { verifyPassword } from "@/lib/auth/password";
-import type { ToolKey } from "@/lib/tools";
+import { db } from "@/shared/db";
+import { users } from "@/shared/db/schema";
+import { verifyPassword } from "@/shared/auth/password";
+import type { ToolKey } from "@/shared/tools";
 
 export const authOptions: NextAuthOptions = {
   providers: [
