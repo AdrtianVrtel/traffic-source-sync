@@ -259,7 +259,7 @@ export const MentionTrackerTool = () => {
             },
             {
               key: "all",
-              label: `Zmienky (${totalCount})`,
+              label: `Všetky zmienky (${totalCount})`,
               children: (
                 <MentionsTable
                   mentions={mentionList}
