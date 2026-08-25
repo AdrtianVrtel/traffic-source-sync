@@ -5,12 +5,7 @@ import type { RefineThemedLayoutSiderProps, RefineLayoutThemedTitleProps } from 
 import React from "react";
 import { Header } from "./header";
 
-// Musia byť stabilné pomenované komponenty (nie inline arrow funkcie v JSX) -
-// ThemedLayout interne volá `Sider` priamo ako funkciu (`SiderToRender({ Title })`)
-// aby zistil, či má vôbec vykresliť sider layout. Nová identita funkcie pri každom
-// renderi Layoutu spôsobovala po opakovaných hot-reloadoch pretečenie zásobníka.
 const CustomSider = (props: RefineThemedLayoutSiderProps) => (
-  // Logout je v dropdowne v hlavičke - v sidebari vraciame len položky menu
   <ThemedSider {...props} render={({ items }) => <>{items}</>} />
 );
 

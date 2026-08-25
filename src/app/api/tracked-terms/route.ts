@@ -16,7 +16,6 @@ export async function GET() {
       query: trackedTerms.query,
       active: trackedTerms.active,
       createdAt: trackedTerms.createdAt,
-      // Zámerne raw bez interpolácie - drizzle column ref v korelovanom subquery renderuje nesprávne
       mentionsCount: sql<number>`(SELECT count(*) FROM mentions WHERE mentions.term_id = tracked_terms.id)`,
     })
     .from(trackedTerms)
@@ -31,11 +30,9 @@ const createSchema = z.object({
     .trim()
     .min(2, "Kľúčové slovo musí mať aspoň 2 znaky")
     .max(100, "Kľúčové slovo môže mať najviac 100 znakov")
-    // Úvodzovky by rozbili odvodenú Tavily query
     .refine((v) => !v.includes('"'), 'Kľúčové slovo nesmie obsahovať úvodzovky (")'),
 });
 
-// Vytvorenie termu - query sa odvodí automaticky (obalenie do úvodzoviek pre exact match)
 export async function POST(req: Request) {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;

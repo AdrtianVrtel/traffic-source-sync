@@ -1,4 +1,3 @@
-// Hashovanie hesiel cez node:crypto scrypt - bez externých závislostí (bcrypt a pod.)
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
 const KEY_LENGTH = 64;

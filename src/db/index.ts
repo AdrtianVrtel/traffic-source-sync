@@ -7,8 +7,6 @@ import { hashPassword } from "@/lib/auth/password";
 import { ALL_TOOL_KEYS } from "@/lib/tools";
 import * as schema from "./schema";
 
-// DDL namiesto drizzle-kit migrácií: standalone Docker build netrasuje migračný adresár,
-// pri takomto počte tabuliek je CREATE TABLE IF NOT EXISTS spoľahlivejší
 const DDL = `
 CREATE TABLE IF NOT EXISTS sync_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,7 +71,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 `;
 
-// Mini-migrácie pre existujúce databázy - CREATE TABLE IF NOT EXISTS nové stĺpce nepridá
 function migrate(sqlite: Database.Database) {
   const userColumns = sqlite.prepare(`PRAGMA table_info(users)`).all() as { name: string }[];
   if (!userColumns.some((c) => c.name === "nickname")) {
@@ -86,11 +83,7 @@ function migrate(sqlite: Database.Database) {
   }
 }
 
-// Seed z env: vytvorí kontá len ak ešte neexistujú - zmeny spravené neskôr v DB
-// (rola, prístupy k nástrojom) sa pri reštarte NEprepisujú
 function seedUsersFromEnv(sqlite: Database.Database) {
-  // INSERT OR IGNORE je atomický - viac procesov (napr. build workery) môže
-  // inicializovať DB súbežne bez pádu na UNIQUE constraint
   const insert = sqlite.prepare(
     `INSERT OR IGNORE INTO users (email, password_hash, role, status, allowed_tools, created_at, updated_at)
      VALUES (@email, @passwordHash, @role, 'active', @allowedTools, @now, @now)`
@@ -114,7 +107,6 @@ function seedUsersFromEnv(sqlite: Database.Database) {
   seed(env.USER2_EMAIL, env.USER2_PASSWORD, "user");
 }
 
-// Seed počiatočných kľúčových slov pre Mention Tracker (ďalšie sa pridávajú cez UI)
 function seedTrackedTerms(sqlite: Database.Database) {
   const insert = sqlite.prepare(
     `INSERT OR IGNORE INTO tracked_terms (term, query, created_at) VALUES (?, ?, ?)`
@@ -136,7 +128,6 @@ function createDb() {
   return drizzle(sqlite, { schema });
 }
 
-// Singleton cez globalThis, aby hot-reload v dev režime neotváral nové spojenia
 const globalForDb = globalThis as unknown as { __drizzleDb?: ReturnType<typeof createDb> };
 
 export const db = globalForDb.__drizzleDb ?? (globalForDb.__drizzleDb = createDb());

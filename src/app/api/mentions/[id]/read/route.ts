@@ -4,7 +4,6 @@ import { requireTool } from "@/lib/auth/permissions";
 import { db } from "@/db";
 import { mentions } from "@/db/schema";
 
-// Označenie jednej zmienky ako prečítanej (alebo späť na neprečítanú cez {isRead: false})
 export async function PATCH(req: Request, ctx: RouteContext<"/api/mentions/[id]/read">) {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;

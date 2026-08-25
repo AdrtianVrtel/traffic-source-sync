@@ -6,7 +6,6 @@ import { syncHistory } from "@/db/schema";
 import { fetchContactsSince, isAcConfigured } from "@/lib/ac-cleaner/ac-client";
 import { classifyContacts } from "@/lib/ac-cleaner/rules";
 
-// Info o poslednom behu - UI ho zobrazuje pri načítaní stránky
 export async function GET() {
   const user = await requireTool("ac-cleaner");
   if (user instanceof NextResponse) return user;
@@ -38,7 +37,6 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const fullScan: boolean = body?.fullScan === true;
 
-  // Inkrementálny sken: pokračujeme od začiatku posledného úspešného behu
   const [lastDone] = await db
     .select()
     .from(syncHistory)

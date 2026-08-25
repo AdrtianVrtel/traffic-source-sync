@@ -33,8 +33,6 @@ import { findTermMatches } from "@/lib/mention-tracker/snippet";
 
 const { Title, Text, Paragraph, Link: AntLink } = Typography;
 
-// Rozdelí text na pole reťazcov/elementov so zvýraznenými výskytmi kľúčového slova
-// (bold + brandová primary farba). Match je case- a diakritiku-insensitive.
 const buildHighlightedParts = (text: string, term: string, color: string): React.ReactNode[] => {
   const matches = findTermMatches(text, term);
   if (!text || matches.length === 0) return [text];
@@ -56,9 +54,6 @@ const buildHighlightedParts = (text: string, term: string, color: string): React
   return parts;
 };
 
-// Úryvok orezaný na max. 3 riadky s "Zobraziť viac"/"Zobraziť menej" na konci
-// posledného riadku (antd Typography ellipsis meria skutočnú výšku v DOM, takže
-// to funguje spoľahlivo aj s vloženými zvýraznenými <Text> elementmi).
 const MentionSnippet = ({ text, term }: { text: string; term: string | null }) => {
   const { token } = theme.useToken();
   const parts = term ? buildHighlightedParts(text, term, token.colorPrimary) : [text];
@@ -78,15 +73,11 @@ const MentionSnippet = ({ text, term }: { text: string; term: string | null }) =
   );
 };
 
-// Favicon zdrojového webu (z Tavily) s tichým fallbackom na generickú ikonku,
-// ak web favicon nemá alebo sa nepodarí načítať.
 const SourceFavicon = ({ url }: { url: string | null }) => {
   const [failed, setFailed] = useState(false);
 
   if (!url || failed) return <GlobalOutlined />;
 
-  // Favicon prichádza z ľubovoľnej, vopred neznámej domény (sledované kľúčové slovo) -
-  // next/image vyžaduje remotePatterns nakonfigurované vopred per-host, čo tu nejde.
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
@@ -132,14 +123,12 @@ interface LastRun {
   errorMessage: string | null;
 }
 
-// Soft-limit pre Tavily free tier (1000 creditov/mesiac); pri cron 4×/deň
 const CREDIT_BUDGET_WARNING = 900;
 const RUNS_PER_DAY = 4;
 
 const formatDate = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleString("sk-SK") : "—";
 
-// Header badge počúva na tento event, aby sa unread counter obnovil okamžite
 const emitMentionsUpdated = () => window.dispatchEvent(new Event("mentions-updated"));
 
 export const MentionTrackerTool = () => {
@@ -157,8 +146,6 @@ export const MentionTrackerTool = () => {
   const [filterRead, setFilterRead] = useState<"all" | "unread" | "read">("all");
   const [termForm] = Form.useForm();
 
-  // Fetch helpery bez setState - setState žije len v .then callbackoch,
-  // aby react-hooks lint nehlásil synchrónny setState v effecte
   const fetchMentionsData = useCallback(async () => {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (filterTermId) params.set("termId", String(filterTermId));
@@ -192,7 +179,6 @@ export const MentionTrackerTool = () => {
     setLastRun(data.lastRun);
   };
 
-  // Pre event handlery (fetch now, mark all read, ...)
   const loadMentions = async () => applyMentionsData(await fetchMentionsData());
   const loadTerms = async () => setTerms((await fetchTermsData()).terms);
 

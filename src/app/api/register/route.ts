@@ -5,8 +5,6 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { hashPassword } from "@/lib/auth/password";
 
-// Verejný endpoint (bez prihlásenia) - prístup chráni náhodný 64-znakový token z pozvánky
-
 const findPendingByToken = async (token: string) => {
   const [user] = await db
     .select()
@@ -16,7 +14,6 @@ const findPendingByToken = async (token: string) => {
   return user;
 };
 
-// Validácia tokenu pri načítaní registračnej stránky
 export async function GET(req: Request) {
   const token = new URL(req.url).searchParams.get("token");
   if (!token) {
@@ -36,7 +33,6 @@ const completeSchema = z.object({
   password: z.string().min(6, "Heslo musí mať aspoň 6 znakov"),
 });
 
-// Dokončenie registrácie: nastaví heslo, aktivuje konto a zneplatní token
 export async function POST(req: Request) {
   const parsed = completeSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {

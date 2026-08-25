@@ -42,7 +42,6 @@ function RegisterForm() {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Registráciu sa nepodarilo dokončiť.");
 
-      // Konto je aktívne - rovno prihlásime a presmerujeme do appky
       const signInResult = await signIn("credentials", {
         email: data.email,
         password: values.password,
@@ -51,7 +50,6 @@ function RegisterForm() {
       if (signInResult?.ok) {
         window.location.href = "/";
       } else {
-        // Nemalo by nastať, ale pre istotu pošleme na login
         window.location.href = "/login";
       }
     } catch (error) {

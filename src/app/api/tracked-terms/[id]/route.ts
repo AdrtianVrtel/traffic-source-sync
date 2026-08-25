@@ -9,7 +9,6 @@ const updateSchema = z.object({
   active: z.boolean(),
 });
 
-// Aktivácia/deaktivácia termu (neaktívny term sa pri fetchi preskakuje)
 export async function PATCH(req: Request, ctx: RouteContext<"/api/tracked-terms/[id]">) {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;
@@ -33,7 +32,6 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/tracked-terms/
   return NextResponse.json({ term: updated });
 }
 
-// Zmazanie termu vrátane jeho zmienok (UI na to upozorní; na dočasné vypnutie slúži PATCH)
 export async function DELETE(_req: Request, ctx: RouteContext<"/api/tracked-terms/[id]">) {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;

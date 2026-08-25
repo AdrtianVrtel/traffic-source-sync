@@ -9,7 +9,6 @@ import { ALL_TOOL_KEYS } from "@/lib/tools";
 
 const toolKeySchema = z.enum(ALL_TOOL_KEYS as [string, ...string[]]);
 
-// passwordHash nikdy neposielame na klienta
 const toDto = (user: typeof users.$inferSelect) => ({
   id: user.id,
   email: user.email,
@@ -34,7 +33,6 @@ const createSchema = z.object({
   allowedTools: z.array(toolKeySchema).default([]),
 });
 
-// Whitelist e-mailu: vytvorí pending používateľa s pozvánkovým tokenom
 export async function POST(req: Request) {
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;

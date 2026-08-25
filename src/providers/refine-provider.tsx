@@ -11,7 +11,6 @@ import { ALL_TOOL_KEYS } from "@/lib/tools";
 import { MentionTrackerIcon } from "@/components/mention-tracker/sidebar-icon";
 import "@refinedev/antd/dist/reset.css";
 
-// Týmto potlačíme neškodný warning z knižnice Refine a Antd, aby Next.js nevyhadzoval červený overlay na obrazovku
 if (typeof window !== "undefined") {
   const originalError = console.error;
   console.error = (...args: any[]) => {
@@ -23,9 +22,6 @@ if (typeof window !== "undefined") {
   };
 }
 
-// Riadi viditeľnosť položiek v menu aj prístup k stránkam (cez <CanAccess>).
-// Admin vidí všetko, user len nástroje povolené v DB. Skutočná ochrana dát
-// je na serveri v API routes (requireTool/requireAdmin).
 const accessControlProvider: AccessControlProvider = {
   can: async ({ resource }) => {
     const session = await getSession();
@@ -35,12 +31,10 @@ const accessControlProvider: AccessControlProvider = {
     if (resource && (ALL_TOOL_KEYS as string[]).includes(resource)) {
       return { can: (session?.user?.tools ?? []).includes(resource as (typeof ALL_TOOL_KEYS)[number]) };
     }
-    // Všetko ostatné (napr. správa používateľov) je len pre adminov
     return { can: false };
   },
 };
 
-// We can add dummy dataProvider since we are just building tools
 const dataProvider = {
   getList: async () => ({ data: [], total: 0 }),
   getOne: async () => ({ data: {} as any }),
@@ -51,12 +45,6 @@ const dataProvider = {
   getCustom: async () => ({ data: {} as any }),
 };
 
-// Musí byť stabilná konštanta MIMO komponentu (nie inline v JSX) - Refine's <CanAccess>
-// (cez useCan) volá accessControlProvider.can() pre každý resource pri každom renderi
-// menu stromu; keď resources pole dostáva nové referencie objektov pri každom renderi
-// RefineProvider (napr. kvôli usePathname()), spôsobovalo to nekonečný cyklus
-// getSession() -> SessionProvider re-render -> nové resources -> CanAccess znova ->
-// getSession() -> ... (Maximum call stack size exceeded v <CanAccess>).
 const RESOURCES = [
   {
     name: "traffic-sync",

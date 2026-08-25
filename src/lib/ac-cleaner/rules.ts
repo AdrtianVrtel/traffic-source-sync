@@ -1,9 +1,3 @@
-// Pravidlá pre identifikáciu testovacích kontaktov.
-// Vychádzajú z kategorizovaného CSV exportu (na_zmazanie_kategorizovane.csv):
-//  - "celé zle" / "zle"  -> hard match (na archiváciu)
-//  - "na kontrolu"       -> soft match (manuálna kontrola)
-// Finančná aktivita sa podľa dohody NErieši.
-
 export interface AcContact {
   id: string;
   email: string;
@@ -30,16 +24,12 @@ export interface ClassificationResult {
   cleanCount: number;
 }
 
-// Celé domény, ktoré sú vždy testovacie (placeholder/rezervované)
 const HARD_DOMAINS = ["example.com", "example.org", "example.net"];
 
-// Vlastná doména - na nej platia pravidlá pre "+" aliasy a podozrivé local-party
 const OWN_DOMAIN = "investinslovakia.eu";
 
-// Podozrivé slová v local-parte e-mailu na vlastnej doméne (soft match - na kontrolu)
 const SUSPICIOUS_LOCAL_WORDS = ["test", "testuje", "cokolvek", "incest", "asdf", "qwert"];
 
-// Podozrivé mená potvrdzujúce interný test (len signál, nerozhoduje o kategórii)
 const SUSPICIOUS_NAME_WORDS = ["spravca", "správca", "admin", "adminko", "test"];
 
 const splitEmail = (email: string) => {
@@ -47,7 +37,6 @@ const splitEmail = (email: string) => {
   return { localPart, domain };
 };
 
-// Šablónovité meno vygenerované testom, napr. "adminFirst adminLast", "investor1First investor1Last"
 const isTemplateName = (firstName: string, lastName: string) =>
   /first$/i.test(firstName.trim()) && /last$/i.test(lastName.trim());
 
@@ -59,7 +48,6 @@ const hasSuspiciousName = (firstName: string, lastName: string) => {
 const normalizePhone = (phone: string) => phone.replace(/[\s\-()]/g, "");
 
 export function classifyContacts(contacts: AcContact[]): ClassificationResult {
-  // Počet výskytov rovnakého telefónu v celej dávke (signál "rovnaká osoba, viac testovacích kont")
   const phoneCounts = new Map<string, number>();
   for (const c of contacts) {
     const phone = normalizePhone(c.phone || "");
@@ -95,7 +83,6 @@ export function classifyContacts(contacts: AcContact[]): ClassificationResult {
       hardReasons.push(`vlastná doména, alias s "+"`);
     }
 
-    // Podozrivý local-part na vlastnej doméne bez aliasu - na kontrolu
     if (domain === OWN_DOMAIN && !localPart.includes("+")) {
       const domainStem = OWN_DOMAIN.split(".")[0];
       if (localPart === domainStem) {

@@ -5,14 +5,13 @@ import { db } from "@/db";
 import { mentions, trackedTerms, fetchRuns } from "@/db/schema";
 import { isTavilyConfigured } from "@/lib/mention-tracker/tavily";
 
-// Zoznam zmienok s filtrami: ?termId=&read=&page=&pageSize=
 export async function GET(req: Request) {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;
 
   const params = new URL(req.url).searchParams;
   const termId = params.get("termId");
-  const read = params.get("read"); // "true" | "false" | null (všetky)
+  const read = params.get("read");
   const page = Math.max(1, Number(params.get("page")) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(params.get("pageSize")) || 20));
 

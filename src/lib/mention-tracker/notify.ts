@@ -1,7 +1,3 @@
-// Notification hook - jediné miesto na budúce napojenie externých notifikácií.
-// MVP: bez NOTIFICATION_WEBHOOK_URL je to no-op (in-app unread badge je jediná notifikácia).
-// Keď sa URL nastaví (Slack Incoming Webhook, n8n, Zapier...), pošle sa tam JSON POST -
-// appka nemusí vedieť nič o cieľovom kanáli.
 import { env } from "@/env";
 
 export interface MentionNotification {
@@ -26,7 +22,6 @@ export async function dispatchNotification(mention: MentionNotification): Promis
       console.error(`Notification webhook vrátil ${response.status} pre ${mention.url}`);
     }
   } catch (error) {
-    // Zlyhanie notifikácie NIKDY nesmie zhodiť fetch job
     console.error("Notification webhook zlyhal:", error);
   }
 }

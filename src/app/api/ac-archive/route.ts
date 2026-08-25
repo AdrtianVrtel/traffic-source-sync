@@ -46,14 +46,12 @@ export async function POST(req: Request) {
   for (const contact of contacts) {
     try {
       if (mode === "dry-run") {
-        // Poistka pred prvým ostrým behom: nič neodosielame, len logujeme, čo by sa stalo
         console.warn(
           `[AC-ARCHIVE DRY-RUN] Kontakt ${contact.email} (AC id ${contact.id}) by dostal tag "test_archived" ` +
             `a bol by odhlásený zo všetkých zoznamov. Dôvody: ${contact.reasons.join("; ")}`
         );
       } else {
         await archiveContact(contact.id);
-        // Drip-feeding medzi kontaktmi, nech nenarazíme na AC rate limit
         await sleep(300);
       }
 

@@ -4,8 +4,6 @@ import { env } from "@/env";
 import { isTavilyConfigured } from "@/lib/mention-tracker/tavily";
 import { runFetchMentions } from "@/lib/mention-tracker/service";
 
-// Trigger z Coolify Scheduled Task. Namiesto session auth zdieľané tajomstvo:
-// Authorization: Bearer <CRON_SECRET>
 const isAuthorized = (req: Request): boolean => {
   if (!env.CRON_SECRET) return false;
   const header = req.headers.get("authorization") ?? "";
@@ -30,7 +28,6 @@ export async function POST(req: Request) {
   try {
     const result = await runFetchMentions("cron");
     if (result.skipped) {
-      // Guard proti súbežnému behu - 200, aby Coolify nehlásil zlyhanie tasku
       return NextResponse.json({ skipped: true, reason: result.reason });
     }
     return NextResponse.json(result);

@@ -22,7 +22,6 @@ export const authOptions: NextAuthOptions = {
         const email = credentials.email.toLowerCase().trim();
         const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
-        // Pending používatelia (bez hesla) sa prihlásiť nemôžu - najprv musia dokončiť registráciu
         if (!user || user.status !== "active" || !user.passwordHash) {
           return null;
         }
@@ -41,8 +40,6 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    // Rola a prístupy sa čítajú z DB pri každom requeste - zmeny spravené adminom
-    // sa tak prejavia okamžite, bez nutnosti odhlásenia
     async jwt({ token }) {
       if (token.email) {
         const [dbUser] = await db
@@ -61,7 +58,6 @@ export const authOptions: NextAuthOptions = {
             token.tools = [];
           }
         } else {
-          // Používateľ bol medzičasom zmazaný/deaktivovaný
           token.role = undefined;
           token.tools = [];
         }

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-// Počet neprečítaných zmienok - obnovuje sa periodicky a okamžite po akciách
-// v trackeri (event "mentions-updated" z komponentu MentionTrackerTool).
 export function useUnreadMentionsCount(): number {
   const [count, setCount] = useState(0);
 

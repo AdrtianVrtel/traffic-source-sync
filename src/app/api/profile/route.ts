@@ -5,8 +5,6 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getSessionUser } from "@/lib/auth/permissions";
 
-// Vlastný profil prihláseného používateľa (akákoľvek rola)
-
 export async function GET() {
   const user = await getSessionUser();
   if (!user) {
@@ -41,7 +39,6 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Neplatný payload" }, { status: 400 });
   }
 
-  // Prázdna prezývka = vrátiť sa k zobrazovaniu e-mailu
   const nickname = parsed.data.nickname || null;
 
   await db

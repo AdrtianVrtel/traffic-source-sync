@@ -1,4 +1,3 @@
-// Serverové kontroly oprávnení pre API routes
 import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
 import { NextResponse } from "next/server";
@@ -16,7 +15,6 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 export const canUseTool = (user: SessionUser, tool: ToolKey) =>
   user.role === "admin" || (user.tools ?? []).includes(tool);
 
-// Vráti používateľa, alebo hotovú error response (401/403), ktorú route rovno returne
 export async function requireTool(tool: ToolKey): Promise<SessionUser | NextResponse> {
   const user = await getSessionUser();
   if (!user) {

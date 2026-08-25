@@ -4,7 +4,6 @@ import { requireTool } from "@/lib/auth/permissions";
 import { db } from "@/db";
 import { mentions } from "@/db/schema";
 
-// Hromadné označenie všetkých zmienok ako prečítané
 export async function POST() {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;

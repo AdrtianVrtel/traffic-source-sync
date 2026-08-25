@@ -89,7 +89,6 @@ export const AcCleanerTool = () => {
     }
   };
 
-  // "Záchrana" kontaktu - odstráni riadok, kontakt sa nearchivuje
   const handleRescue = (contact: ClassifiedContact) => {
     if (contact.category === "hard") {
       setHardMatches((prev) => prev.filter((c) => c.id !== contact.id));
@@ -99,7 +98,6 @@ export const AcCleanerTool = () => {
     message.success(`Kontakt ${contact.email} bol vyradený z archivácie.`);
   };
 
-  // Presun medzi záložkami (hard <-> soft)
   const handleMove = (contact: ClassifiedContact) => {
     if (contact.category === "hard") {
       setHardMatches((prev) => prev.filter((c) => c.id !== contact.id));

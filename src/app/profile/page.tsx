@@ -49,7 +49,6 @@ const ProfileSettings = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Uloženie zlyhalo.");
 
-      // Obnoví next-auth session -> hlavička hneď zobrazí novú prezývku
       await update();
       message.success(
         data.nickname
@@ -63,8 +62,6 @@ const ProfileSettings = () => {
     }
   };
 
-  // Spin namiesto Card loading - Card so skeletonom by odmontoval Form,
-  // a antd useForm potom hlási "not connected to any Form element"
   return (
     <Card variant="borderless">
       <Title level={4}>Nastavenie profilu</Title>

@@ -12,7 +12,6 @@ const toolKeySchema = z.enum(ALL_TOOL_KEYS as [string, ...string[]]);
 const updateSchema = z.object({
   role: z.enum(["admin", "user"]).optional(),
   allowedTools: z.array(toolKeySchema).optional(),
-  // Vygeneruje nový pozvánkový token (len pre pending používateľov)
   regenerateInvite: z.boolean().optional(),
 });
 
@@ -33,7 +32,6 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/users/[id]">) 
     return NextResponse.json({ error: "Používateľ neexistuje." }, { status: 404 });
   }
 
-  // Poistka: admin si nemôže sám sebe odobrať admin rolu
   if (parsed.data.role && parsed.data.role !== "admin" && target.email === admin.email) {
     return NextResponse.json({ error: "Nemôžete zmeniť rolu vlastného konta." }, { status: 400 });
   }

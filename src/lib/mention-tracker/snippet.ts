@@ -1,10 +1,3 @@
-// Extrakcia úryvku okolo kľúčového slova a hľadanie jeho výskytov.
-// Tavily vracia vlastný `content`, ktorý kľúčové slovo obsahovať nemusí - preto
-// úryvok vyrezávame z plného textu stránky (`raw_content`) okolo prvého výskytu.
-// Používa sa na serveri (pri fetchi) aj na klientovi (pri zvýrazňovaní).
-
-// Fold pre porovnávanie: lowercase + odstránenie diakritiky, ZACHOVÁVA dĺžku stringu,
-// aby indexy z folded verzie sedeli na originál.
 const foldChar = (ch: string): string => {
   const lower = ch.toLowerCase();
   const base = lower.normalize("NFD").replace(/\p{M}/gu, "");
@@ -19,7 +12,6 @@ export interface TermMatch {
   end: number;
 }
 
-// Všetky výskyty kľúčového slova v texte (case- a diakritiku-insensitive)
 export function findTermMatches(text: string, term: string): TermMatch[] {
   const needle = fold(term.trim());
   if (!needle) return [];
@@ -42,11 +34,9 @@ const collapseWhitespace = (text: string) => text.replace(/\s+/g, " ").trim();
 
 export interface ExtractedSnippet {
   snippet: string;
-  // false = kľúčové slovo sa v texte nenašlo, úryvok je len začiatok textu
   matched: boolean;
 }
 
-// Vyreže úryvok tak, aby obsahoval prvý výskyt kľúčového slova aj kontext okolo neho.
 export function extractSnippet(rawText: string, term: string, windowSize = 320): ExtractedSnippet {
   const text = collapseWhitespace(rawText);
   if (!text) return { snippet: "", matched: false };
@@ -62,7 +52,6 @@ export function extractSnippet(rawText: string, term: string, windowSize = 320):
   let start = Math.max(0, match.start - context);
   let end = Math.min(text.length, match.end + context);
 
-  // Zarovnanie na hranice slov, aby úryvok nezačínal/nekončil v polovici slova
   if (start > 0) {
     const spaceIndex = text.indexOf(" ", start);
     if (spaceIndex !== -1 && spaceIndex < match.start) start = spaceIndex + 1;

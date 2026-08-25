@@ -1,12 +1,8 @@
-// Klient pre ActiveCampaign API v3 (https://developers.activecampaign.com/reference/overview)
-// Autentifikácia hlavičkou "Api-Token". Limit AC je 5 požiadaviek/sekundu, preto drip-feeding.
-
 import { env } from "@/env";
 import type { AcContact } from "./rules";
 
 const ARCHIVE_TAG = "test_archived";
 const PAGE_SIZE = 100;
-// Poistka proti nekonečnej paginácii
 const MAX_CONTACTS = 20000;
 
 export const isAcConfigured = () => Boolean(env.AC_API_URL && env.AC_API_KEY);
@@ -52,7 +48,6 @@ interface RawAcContact {
   cdate: string | null;
 }
 
-// Stiahne kontakty vytvorené od zadaného dátumu (ISO). Bez dátumu stiahne všetky.
 export async function fetchContactsSince(sinceIso: string | null): Promise<AcContact[]> {
   const contacts: AcContact[] = [];
   let offset = 0;
@@ -89,7 +84,6 @@ export async function fetchContactsSince(sinceIso: string | null): Promise<AcCon
 
     if (page.length < PAGE_SIZE) break;
     offset += PAGE_SIZE;
-    // Drip-feeding, AC povoľuje 5 req/s
     await sleep(250);
   }
 
@@ -98,7 +92,6 @@ export async function fetchContactsSince(sinceIso: string | null): Promise<AcCon
 
 let cachedArchiveTagId: string | null = null;
 
-// Nájde alebo vytvorí tag "test_archived" a vráti jeho id
 async function getArchiveTagId(): Promise<string> {
   if (cachedArchiveTagId) return cachedArchiveTagId;
 
@@ -126,9 +119,6 @@ async function getArchiveTagId(): Promise<string> {
   return cachedArchiveTagId;
 }
 
-// "Archivácia" kontaktu: pridá tag test_archived + odhlási kontakt zo všetkých zoznamov.
-// AC nemá verejne zdokumentovaný archive endpoint - takto označené kontakty sa dajú v AC UI
-// vyfiltrovať podľa tagu a hromadne zarchivovať natívnou funkciou Archive.
 export async function archiveContact(contactId: string): Promise<void> {
   const tagId = await getArchiveTagId();
 
@@ -136,7 +126,6 @@ export async function archiveContact(contactId: string): Promise<void> {
     method: "POST",
     body: JSON.stringify({ contactTag: { contact: contactId, tag: tagId } }),
   });
-  // 200/201 = pridané, 422 typicky znamená, že tag už kontakt má - to nie je chyba
   if (!tagResponse.ok && tagResponse.status !== 422) {
     throw new Error(`Nepodarilo sa pridať tag kontaktu ${contactId} (${tagResponse.status})`);
   }
@@ -149,7 +138,6 @@ export async function archiveContact(contactId: string): Promise<void> {
   const memberships: { list: string; status: string }[] = listsData.contactLists ?? [];
 
   for (const membership of memberships) {
-    // status 2 = unsubscribed
     if (String(membership.status) === "2") continue;
 
     const unsubResponse = await acFetch(`/api/3/contactLists`, {

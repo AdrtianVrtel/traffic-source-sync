@@ -3,7 +3,6 @@ import { requireTool } from "@/lib/auth/permissions";
 import { isTavilyConfigured } from "@/lib/mention-tracker/tavily";
 import { getLastRunAt, runFetchMentions, RUN_COOLDOWN_MINUTES } from "@/lib/mention-tracker/service";
 
-// Manuálny trigger z UI - rate-limited na 1× za RUN_COOLDOWN_MINUTES
 export async function POST() {
   const user = await requireTool("mention-tracker");
   if (user instanceof NextResponse) return user;

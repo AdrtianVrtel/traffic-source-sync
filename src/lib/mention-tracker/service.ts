@@ -1,5 +1,3 @@
-// Core fetch + dedup logika Mention Trackera. Volajú ju obe cesty:
-// /api/cron/fetch-mentions (Coolify Scheduled Task) aj /api/mentions/fetch-now (UI tlačidlo).
 import { and, desc, eq, gt, lt } from "drizzle-orm";
 import { db } from "@/db";
 import { fetchRuns, mentions, trackedTerms } from "@/db/schema";
@@ -7,13 +5,11 @@ import { searchTavily, type TavilyResult } from "./tavily";
 import { extractSnippet } from "./snippet";
 import { dispatchNotification } from "./notify";
 
-// Guard/rate-limit okno v minútach
 export const RUN_COOLDOWN_MINUTES = 10;
 
 const TRACKING_PARAMS_PREFIXES = ["utm_", "mc_", "pk_"];
 const TRACKING_PARAMS = ["fbclid", "gclid", "msclkid", "ref", "igshid"];
 
-// Normalizácia URL pred dedup kontrolou - strip tracking parametrov a fragmentu
 export function normalizeUrl(rawUrl: string): string {
   try {
     const url = new URL(rawUrl);
@@ -25,7 +21,6 @@ export function normalizeUrl(rawUrl: string): string {
         url.searchParams.delete(key);
       }
     }
-    // Zjednotenie trailing slash (okrem root path)
     if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
       url.pathname = url.pathname.slice(0, -1);
     }
@@ -35,8 +30,6 @@ export function normalizeUrl(rawUrl: string): string {
   }
 }
 
-// Úryvok musí obsahovať miesto, kde je kľúčové slovo použité. Tavily `content` to
-// negarantuje, preto skúšame najprv plný text stránky a až potom padáme na `content`.
 const buildSnippet = (result: TavilyResult, term: string): string => {
   if (result.rawContent) {
     const fromRaw = extractSnippet(result.rawContent, term);
@@ -44,9 +37,6 @@ const buildSnippet = (result: TavilyResult, term: string): string => {
   }
 
   const fromContent = extractSnippet(result.content, term);
-  if (fromContent.matched) return fromContent.snippet;
-
-  // Kľúčové slovo nie je ani v texte stránky (Tavily ho našlo napr. len v URL/titulku)
   return fromContent.snippet;
 };
 
@@ -69,7 +59,6 @@ export interface FetchRunResult {
   newMentionsCount?: number;
 }
 
-// Vráti čas posledného behu (na rate-limit manuálneho triggera)
 export async function getLastRunAt(): Promise<string | null> {
   const [last] = await db
     .select({ runAt: fetchRuns.runAt })
@@ -82,8 +71,6 @@ export async function getLastRunAt(): Promise<string | null> {
 export async function runFetchMentions(trigger: "cron" | "manual"): Promise<FetchRunResult> {
   const cutoff = minutesAgoIso(RUN_COOLDOWN_MINUTES);
 
-  // Guard proti súbežnému behu: existuje running záznam mladší než cooldown?
-  // (Coolify Scheduled Task vie za istých okolností spustiť ten istý príkaz súbežne.)
   const [runningRun] = await db
     .select({ id: fetchRuns.id })
     .from(fetchRuns)
@@ -93,7 +80,6 @@ export async function runFetchMentions(trigger: "cron" | "manual"): Promise<Fetc
     return { skipped: true, reason: "Iný fetch práve beží." };
   }
 
-  // Staré "running" záznamy (spadnutý proces) označíme ako error, nech neblokujú históriu
   await db
     .update(fetchRuns)
     .set({ status: "error", errorMessage: "Beh sa nikdy nedokončil (pravdepodobne reštart appky)." })
@@ -113,13 +99,12 @@ export async function runFetchMentions(trigger: "cron" | "manual"): Promise<Fetc
 
     for (const term of activeTerms) {
       const results = await searchTavily(term.query);
-      creditsUsed += 1; // search_depth: basic = 1 credit/request
+      creditsUsed += 1;
       resultsCount += results.length;
 
       for (const result of results) {
         const url = normalizeUrl(result.url);
         const snippet = buildSnippet(result, term.term);
-        // Dedup: URL je unique globálne, onConflictDoNothing preskočí už videné
         const inserted = await db
           .insert(mentions)
           .values({
