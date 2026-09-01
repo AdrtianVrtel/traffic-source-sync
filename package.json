@@ -17,6 +17,7 @@
     "@refinedev/nextjs-router": "^7.0.5",
     "antd": "^5.29.3",
     "better-sqlite3": "^13.0.3",
+    "copy-to-clipboard": "^4.0.2",
     "drizzle-orm": "^0.45.2",
     "html2canvas": "^1.4.1",
     "next": "16.2.12",

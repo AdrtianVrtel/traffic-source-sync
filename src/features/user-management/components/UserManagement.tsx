@@ -7,6 +7,7 @@ import {
   Form,
   Input,
   message,
+  Modal,
   Popconfirm,
   Select,
   Space,
@@ -18,10 +19,12 @@ import {
 import {
   CopyOutlined,
   DeleteOutlined,
+  LinkOutlined,
   ReloadOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
 import { useGetIdentity } from "@refinedev/core";
+import copy from "copy-to-clipboard";
 import { TOOLS } from "@/shared/tools";
 
 const { Title, Text } = Typography;
@@ -47,6 +50,7 @@ export const UserManagement = () => {
   const [creating, setCreating] = useState(false);
   const [form] = Form.useForm();
   const newRole = Form.useWatch("role", form);
+  const [invite, setInvite] = useState<{ email: string; url: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,8 +90,8 @@ export const UserManagement = () => {
 
       form.resetFields();
       setUserList((prev) => [...prev, data.user]);
-      await navigator.clipboard.writeText(inviteUrl(data.user.inviteToken)).catch(() => {});
-      message.success(`${data.user.email} pridaný na whitelist. Pozvánkový odkaz je v schránke.`, 6);
+      setInvite({ email: data.user.email, url: inviteUrl(data.user.inviteToken) });
+      message.success(`${data.user.email} pridaný na whitelist.`);
     } catch (error) {
       message.error(error instanceof Error ? error.message : "Používateľa sa nepodarilo pridať.");
     } finally {
@@ -125,10 +129,17 @@ export const UserManagement = () => {
     }
   };
 
-  const handleCopyInvite = async (user: ManagedUser) => {
+  const handleShowInvite = (user: ManagedUser) => {
     if (!user.inviteToken) return;
-    await navigator.clipboard.writeText(inviteUrl(user.inviteToken));
-    message.success("Pozvánkový odkaz skopírovaný do schránky.");
+    setInvite({ email: user.email, url: inviteUrl(user.inviteToken) });
+  };
+
+  const handleCopy = async (url: string) => {
+    if (await copy(url)) {
+      message.success("Odkaz skopírovaný do schránky.");
+    } else {
+      message.warning("Kopírovanie zlyhalo. Označte odkaz v políčku a skopírujte ho ručne.");
+    }
   };
 
   const columns = [
@@ -198,8 +209,8 @@ export const UserManagement = () => {
       render: (_: unknown, record: ManagedUser) => (
         <Space>
           {record.status === "pending" && record.inviteToken && (
-            <Tooltip title="Skopírovať pozvánkový odkaz">
-              <Button size="small" icon={<CopyOutlined />} onClick={() => handleCopyInvite(record)} />
+            <Tooltip title="Zobraziť pozvánkový odkaz">
+              <Button size="small" icon={<LinkOutlined />} onClick={() => handleShowInvite(record)} />
             </Tooltip>
           )}
           {record.status === "pending" && (
@@ -210,7 +221,7 @@ export const UserManagement = () => {
                 onClick={async () => {
                   const updated = await patchUser(record.id, { regenerateInvite: true }, "Nová pozvánka vygenerovaná.");
                   if (updated?.inviteToken) {
-                    await navigator.clipboard.writeText(inviteUrl(updated.inviteToken)).catch(() => {});
+                    setInvite({ email: updated.email, url: inviteUrl(updated.inviteToken) });
                   }
                 }}
               />
@@ -286,6 +297,41 @@ export const UserManagement = () => {
         pagination={false}
         scroll={{ x: "max-content" }}
       />
+
+      <Modal
+        open={invite !== null}
+        title="Pozvánkový odkaz"
+        onCancel={() => setInvite(null)}
+        footer={[
+          <Button key="close" onClick={() => setInvite(null)}>
+            Zavrieť
+          </Button>,
+          <Button
+            key="copy"
+            type="primary"
+            icon={<CopyOutlined />}
+            onClick={() => invite && handleCopy(invite.url)}
+          >
+            Kopírovať
+          </Button>,
+        ]}
+      >
+        {invite && (
+          <Space direction="vertical" style={{ width: "100%" }} size="middle">
+            <Text type="secondary">
+              Pošlite tento odkaz používateľovi <Text strong>{invite.email}</Text>. Cez neho si nastaví heslo
+              a dokončí registráciu. Po dokončení odkaz prestane platiť.
+            </Text>
+            <Input
+              readOnly
+              autoFocus
+              value={invite.url}
+              onFocus={(e) => e.currentTarget.select()}
+              onClick={(e) => e.currentTarget.select()}
+            />
+          </Space>
+        )}
+      </Modal>
     </Card>
   );
 };

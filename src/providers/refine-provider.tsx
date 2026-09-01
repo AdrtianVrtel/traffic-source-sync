@@ -1,5 +1,6 @@
 "use client";
 
+import "@ant-design/v5-patch-for-react-19";
 import { Refine, type AccessControlProvider } from "@refinedev/core";
 import routerProvider from "@refinedev/nextjs-router/app";
 import { usePathname } from "next/navigation";
