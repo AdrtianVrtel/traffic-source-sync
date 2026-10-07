@@ -12,6 +12,7 @@ export const users = sqliteTable("users", {
     .default("pending"),
   nickname: text("nickname"),
   allowedTools: text("allowed_tools").notNull().default("[]"),
+  fuelPreferences: text("fuel_preferences"),
   inviteToken: text("invite_token"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),

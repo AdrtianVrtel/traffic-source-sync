@@ -2,6 +2,7 @@ export const TOOLS = [
   { key: "traffic-sync", label: "Traffic Source Sync", path: "/traffic-sync" },
   { key: "ac-cleaner", label: "ActiveCampaign Cleaner", path: "/ac-cleaner" },
   { key: "mention-tracker", label: "Mention Tracker", path: "/mention-tracker" },
+  { key: "fuel-prices", label: "Ceny pohonných látok", path: "/fuel-prices" },
 ] as const;
 
 export type ToolKey = (typeof TOOLS)[number]["key"];

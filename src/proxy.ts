@@ -7,5 +7,5 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: ["/", "/traffic-sync", "/ac-cleaner", "/mention-tracker", "/admin/users", "/profile"],
+  matcher: ["/", "/traffic-sync", "/ac-cleaner", "/mention-tracker", "/fuel-prices", "/admin/users", "/profile"],
 };

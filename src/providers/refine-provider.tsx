@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { SessionProvider, getSession } from "next-auth/react";
 import { ConfigProvider, App as AntdApp } from "antd";
 import { authProvider } from "./auth-provider";
-import { UploadOutlined, ClearOutlined } from "@ant-design/icons";
+import { UploadOutlined, ClearOutlined, CarOutlined } from "@ant-design/icons";
 import { ALL_TOOL_KEYS } from "@/shared/tools";
 import { MentionTrackerIcon } from "@/features/mention-tracker/components/SidebarIcon";
 import "@refinedev/antd/dist/reset.css";
@@ -69,6 +69,14 @@ const RESOURCES = [
     meta: {
       label: "Mention Tracker",
       icon: <MentionTrackerIcon />,
+    },
+  },
+  {
+    name: "fuel-prices",
+    list: "/fuel-prices",
+    meta: {
+      label: "Ceny pohonných látok",
+      icon: <CarOutlined />,
     },
   },
 ];

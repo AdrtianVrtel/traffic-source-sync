@@ -79,5 +79,6 @@ const addColumnIfMissing = (
 export function migrate(sqlite: Database.Database) {
   sqlite.exec(DDL);
   addColumnIfMissing(sqlite, "users", "nickname", "TEXT");
+  addColumnIfMissing(sqlite, "users", "fuel_preferences", "TEXT");
   addColumnIfMissing(sqlite, "mentions", "favicon_url", "TEXT");
 }
